@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Frontend API</title>
+</head>
+<body>
+    <h1>员工数据调试</h1>
+    <div id="status">正在加载...</div>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const statusDiv = document.getElementById('status');
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                statusDiv.innerHTML = '正在登录...';
+                
+                // 登录
+                const loginResponse = await fetch('http://localhost:3000/api/auth/login/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                
+                const loginData = await loginResponse.json();
+                console.log('Login response:', loginData);
+                
+                if (loginData.success && loginData.data.token) {
+                    statusDiv.innerHTML = '登录成功，正在获取员工数据...';
+                    
+                    // 获取员工数据
+                    const employeesResponse = await fetch('http://localhost:3000/api/employees/', {
+                        headers: {
+                            'Authorization': `Token ${loginData.data.token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const employeesData = await employeesResponse.json();
+                    console.log('Employees response:', employeesData);
+                    
+                    statusDiv.innerHTML = '数据获取成功！';
+                    resultDiv.innerHTML = `
+                        <h2>员工数据统计</h2>
+                        <p>总员工数: ${employeesData.total_count || employeesData.count || 0}</p>
+                        <p>当前页员工数: ${employeesData.results?.length || 0}</p>
+                        <p>总页数: ${employeesData.total_pages || 0}</p>
+                        <p>当前页: ${employeesData.current_page || 0}</p>
+                        <h3>前5名员工:</h3>
+                        <ul>
+                            ${(employeesData.results || []).slice(0, 5).map(emp => 
+                                `<li>${emp.name} - ${emp.department} - ${emp.position}</li>`
+                            ).join('')}
+                        </ul>
+                    `;
+                } else {
+                    statusDiv.innerHTML = '登录失败';
+                    resultDiv.innerHTML = `<p>错误: ${loginData.message || '未知错误'}</p>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '发生错误';
+                resultDiv.innerHTML = `<p>错误: ${error.message}</p>`;
+                console.error('Error:', error);
+            }
+        }
+        
+        // 页面加载后执行测试
+        window.onload = testAPI;
+    </script>
+</body>
+</html> 

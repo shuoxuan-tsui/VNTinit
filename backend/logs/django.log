@@ -1775,3 +1775,23 @@ INFO 2025-06-08 17:37:02,895 basehttp 61664 140101153711808 "GET /api/employees/
 INFO 2025-06-08 17:37:02,909 basehttp 61664 140101153711808 "GET /api/salaries/stats/ HTTP/1.1" 200 122
 INFO 2025-06-08 17:37:02,980 basehttp 61664 140101153711808 "GET /api/salaries/ HTTP/1.1" 200 9157
 INFO 2025-06-08 17:37:13,889 basehttp 61664 140101153711808 "GET /api/salaries/ HTTP/1.1" 200 9157
+INFO 2025-06-08 18:17:16,712 autoreload 77974 139952764858496 Watching for file changes with StatReloader
+INFO 2025-06-08 18:28:36,318 autoreload 82595 140205997285504 Watching for file changes with StatReloader
+INFO 2025-06-08 18:28:51,620 basehttp 82595 140205851932352 "POST /api/auth/login/ HTTP/1.1" 200 196
+INFO 2025-06-08 18:28:59,329 basehttp 82595 140205851932352 "POST /api/auth/login/ HTTP/1.1" 200 200
+WARNING 2025-06-08 18:28:59,622 log 82595 140205851932352 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-08 18:28:59,622 basehttp 82595 140205851932352 "GET /api/_nuxt_icon/heroicons.json?icons=arrow-path%2Carrow-right-on-rectangle%2Carrow-up%2Cbanknotes%2Cbars-3%2Cbell%2Cbuilding-office%2Cbuilding-office-2%2Ccalculator%2Ccalendar%2Cchart-bar%2Cchevron-right%2Cclock%2Ccog-6-tooth%2Cdocument-chart-bar%2Chome%2Cshield-check%2Csparkles%2Cuser%2Cuser-plus%2Cusers%2Cwrench-screwdriver HTTP/1.1" 404 8335
+WARNING 2025-06-08 18:29:01,370 log 82595 140205843539648 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-08 18:29:01,370 basehttp 82595 140205843539648 "GET /api/_nuxt_icon/heroicons.json?icons=arrow-down-tray%2Cchevron-down%2Cmagnifying-glass%2Cplus HTTP/1.1" 404 8101
+INFO 2025-06-08 18:29:01,386 basehttp 82595 140205851932352 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3568
+WARNING 2025-06-08 18:29:01,432 log 82595 140205851932352 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-08 18:29:01,433 basehttp 82595 140205851932352 "GET /api/_nuxt_icon/heroicons.json?icons=bars-arrow-down%2Ceye%2Cpencil%2Ctrash HTTP/1.1" 404 8083
+WARNING 2025-06-08 18:29:02,244 log 82595 140205843539648 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-08 18:29:02,245 basehttp 82595 140205843539648 "GET /api/_nuxt_icon/heroicons.json?icons=chart-pie%2Cuser-group HTTP/1.1" 404 8067
+INFO 2025-06-08 18:29:02,256 basehttp 82595 140205851932352 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-08 18:29:02,283 log 82595 140205851932352 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-08 18:29:02,283 basehttp 82595 140205851932352 "GET /api/_nuxt_icon/heroicons.json?icons=code-bracket%2Ccurrency-dollar%2Cmegaphone%2Cphone HTTP/1.1" 404 8095
+WARNING 2025-06-08 18:29:03,531 log 82595 140205851932352 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-08 18:29:03,532 basehttp 82595 140205851932352 "GET /api/_nuxt_icon/heroicons.json?icons=chevron-up-down%2Cprinter HTTP/1.1" 404 8070
+WARNING 2025-06-08 18:29:04,644 log 82595 140205851932352 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-08 18:29:04,645 basehttp 82595 140205851932352 "GET /api/_nuxt_icon/heroicons.json?icons=calendar-days%2Ccheck-circle%2Cexclamation-triangle%2Cx-circle HTTP/1.1" 404 8107

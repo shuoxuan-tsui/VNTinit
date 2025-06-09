@@ -20,15 +20,21 @@ export const useEmployeeApi = () => {
         },
         params: params // 用于将来的分页、排序、筛选
       })
-      // API 返回的数据结构可能是 { success: true, data: { results: [], count: 0, ... } }
-      // 或者直接是 { results: [], count: 0, ... }
+      // API 返回的数据结构可能是 { success: true, data: { results: [], total_count: 0, ... } }
+      // 或者直接是 { results: [], total_count: 0, ... }
       // 我们需要确保返回的是员工数组
       if (response && response.success && response.data && Array.isArray(response.data.results)) {
-        return response.data // 返回包含 results, count 等的对象
+        return {
+          results: response.data.results,
+          count: response.data.total_count || response.data.count || response.data.results.length
+        }
       } else if (Array.isArray(response)) { // 如果直接返回数组
         return { results: response, count: response.length } 
       } else if (response && Array.isArray(response.results)) { // 如果返回对象包含results数组
-        return response
+        return {
+          results: response.results,
+          count: response.total_count || response.count || response.results.length
+        }
       }
       console.error('Invalid API response structure for getEmployees:', response)
       return { results: [], count: 0 } // 返回空数据结构以避免错误

@@ -1,268 +1,288 @@
 <template>
   <div class="max-w-4xl mx-auto">
-    <!-- 加载状态 -->
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="inline-flex items-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3"></div>
-        <span class="text-gray-600">加载员工信息中...</span>
-      </div>
-    </div>
-
-    <!-- 员工不存在 -->
-    <div v-else-if="!employee" class="text-center py-12">
-      <Icon name="heroicons:exclamation-triangle" class="mx-auto h-12 w-12 text-gray-400" />
-      <h3 class="mt-2 text-sm font-medium text-gray-900">员工信息未找到</h3>
-      <p class="mt-1 text-sm text-gray-500">该员工可能已被删除或不存在</p>
-      <div class="mt-6">
+    <!-- 页面标题 -->
+    <div class="mb-6">
+      <div class="flex items-center space-x-4">
         <NuxtLink
           to="/employees"
-          class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
         >
+          <Icon name="heroicons:arrow-left" class="mr-1 h-4 w-4" />
           返回员工列表
         </NuxtLink>
       </div>
+      <h1 class="mt-2 text-2xl font-bold text-gray-900">编辑员工信息</h1>
+      <p class="mt-1 text-sm text-gray-500">修改员工的基本信息和工作信息</p>
     </div>
 
-    <!-- 编辑表单 -->
-    <div v-else>
-      <!-- 页面标题 -->
-      <div class="mb-6">
-        <div class="flex items-center space-x-4">
-          <NuxtLink
-            to="/employees"
-            class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <Icon name="heroicons:arrow-left" class="mr-1 h-4 w-4" />
-            返回员工列表
-          </NuxtLink>
+    <!-- 加载状态 -->
+    <div v-if="loading" class="p-12 text-center">
+      <div class="inline-flex items-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3"></div>
+        <span class="text-gray-600 text-lg">加载中，请稍候...</span>
+      </div>
+    </div>
+
+    <!-- 表单 -->
+    <form v-else @submit.prevent="submitForm" class="space-y-6">
+      <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-medium text-gray-900">基本信息</h3>
         </div>
-        <h1 class="mt-2 text-2xl font-bold text-gray-900">编辑员工信息</h1>
-        <p class="mt-1 text-sm text-gray-500">编辑 {{ employee.name }} ({{ employee.employee_id }}) 的信息</p>
+        
+        <div class="px-6 py-6 space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 姓名 -->
+            <div>
+              <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                姓名 <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="name"
+                v-model="form.name"
+                type="text"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.name }"
+                placeholder="请输入员工姓名"
+              />
+              <p v-if="errors.name" class="mt-1 text-sm text-red-600">{{ errors.name }}</p>
+            </div>
+
+            <!-- 工号 -->
+            <div>
+              <label for="employee_id" class="block text-sm font-medium text-gray-700 mb-1">
+                工号 <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="employee_id"
+                v-model="form.employee_id"
+                type="text"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.employee_id }"
+                placeholder="请输入员工工号"
+              />
+              <p v-if="errors.employee_id" class="mt-1 text-sm text-red-600">{{ errors.employee_id }}</p>
+            </div>
+
+            <!-- 性别 -->
+            <div>
+              <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">
+                性别 <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="gender"
+                v-model="form.gender"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.gender }"
+              >
+                <option value="">请选择性别</option>
+                <option value="M">男</option>
+                <option value="F">女</option>
+              </select>
+              <p v-if="errors.gender" class="mt-1 text-sm text-red-600">{{ errors.gender }}</p>
+            </div>
+
+            <!-- 电话 -->
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
+                电话号码 <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="phone"
+                v-model="form.phone"
+                type="tel"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.phone }"
+                placeholder="请输入手机号码"
+              />
+              <p v-if="errors.phone" class="mt-1 text-sm text-red-600">{{ errors.phone }}</p>
+            </div>
+
+            <!-- 出生日期 -->
+            <div>
+              <label for="birth_date" class="block text-sm font-medium text-gray-700 mb-1">
+                出生日期 <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="birth_date"
+                v-model="form.birth_date"
+                type="date"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.birth_date }"
+              />
+              <p v-if="errors.birth_date" class="mt-1 text-sm text-red-600">{{ errors.birth_date }}</p>
+            </div>
+
+            <!-- 入职日期 -->
+            <div>
+              <label for="hire_date" class="block text-sm font-medium text-gray-700 mb-1">
+                入职日期 <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="hire_date"
+                v-model="form.hire_date"
+                type="date"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.hire_date }"
+              />
+              <p v-if="errors.hire_date" class="mt-1 text-sm text-red-600">{{ errors.hire_date }}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- 表单 -->
-      <form @submit.prevent="submitForm" class="space-y-6">
-        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">基本信息</h3>
-          </div>
-          
-          <div class="px-6 py-6 space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- 姓名 -->
-              <div>
-                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
-                  姓名 <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="name"
-                  v-model="form.name"
-                  type="text"
-                  required
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
-                  :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.name }"
-                  placeholder="请输入员工姓名"
-                />
-                <p v-if="errors.name" class="mt-1 text-sm text-red-600">{{ errors.name }}</p>
-              </div>
-
-              <!-- 工号 -->
-              <div>
-                <label for="employee_id" class="block text-sm font-medium text-gray-700 mb-1">
-                  工号 <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="employee_id"
-                  v-model="form.employee_id"
-                  type="text"
-                  required
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
-                  :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.employee_id }"
-                  placeholder="请输入员工工号"
-                />
-                <p v-if="errors.employee_id" class="mt-1 text-sm text-red-600">{{ errors.employee_id }}</p>
-              </div>
-
-              <!-- 性别 -->
-              <div>
-                <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">
-                  性别 <span class="text-red-500">*</span>
-                </label>
-                <select
-                  id="gender"
-                  v-model="form.gender"
-                  required
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.gender }"
-                >
-                  <option value="">请选择性别</option>
-                  <option value="M">男</option>
-                  <option value="F">女</option>
-                </select>
-                <p v-if="errors.gender" class="mt-1 text-sm text-red-600">{{ errors.gender }}</p>
-              </div>
-
-              <!-- 电话 -->
-              <div>
-                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">
-                  电话号码 <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="phone"
-                  v-model="form.phone"
-                  type="tel"
-                  required
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
-                  :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.phone }"
-                  placeholder="请输入手机号码"
-                />
-                <p v-if="errors.phone" class="mt-1 text-sm text-red-600">{{ errors.phone }}</p>
-              </div>
-
-              <!-- 出生日期 -->
-              <div>
-                <label for="birth_date" class="block text-sm font-medium text-gray-700 mb-1">
-                  出生日期 <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="birth_date"
-                  v-model="form.birth_date"
-                  type="date"
-                  required
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.birth_date }"
-                />
-                <p v-if="errors.birth_date" class="mt-1 text-sm text-red-600">{{ errors.birth_date }}</p>
-              </div>
-
-              <!-- 入职日期 -->
-              <div>
-                <label for="hire_date" class="block text-sm font-medium text-gray-700 mb-1">
-                  入职日期 <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="hire_date"
-                  v-model="form.hire_date"
-                  type="date"
-                  required
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.hire_date }"
-                />
-                <p v-if="errors.hire_date" class="mt-1 text-sm text-red-600">{{ errors.hire_date }}</p>
-              </div>
-            </div>
-          </div>
+      <!-- 工作信息 -->
+      <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-medium text-gray-900">工作信息</h3>
         </div>
+        
+        <div class="px-6 py-6 space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 部门 -->
+            <div>
+              <label for="department" class="block text-sm font-medium text-gray-700 mb-1">
+                部门 <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="department"
+                v-model="form.department_ref"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.department }"
+              >
+                <option value="">请选择部门</option>
+                <option v-for="dept in departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
+              </select>
+              <p v-if="errors.department" class="mt-1 text-sm text-red-600">{{ errors.department }}</p>
+            </div>
 
-        <!-- 工作信息 -->
-        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">工作信息</h3>
-          </div>
-          
-          <div class="px-6 py-6 space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- 部门 -->
-              <div>
-                <label for="department" class="block text-sm font-medium text-gray-700 mb-1">
-                  部门 <span class="text-red-500">*</span>
-                </label>
-                <select
-                  id="department"
-                  v-model="form.department_ref"
-                  required
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.department }"
-                >
-                  <option value="">请选择部门</option>
-                  <option v-for="dept in departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
-                </select>
-                <p v-if="errors.department" class="mt-1 text-sm text-red-600">{{ errors.department }}</p>
-              </div>
+            <!-- 职称 -->
+            <div>
+              <label for="position" class="block text-sm font-medium text-gray-700 mb-1">
+                职称/职务 <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="position"
+                v-model="form.position"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.position }"
+              >
+                <option value="">请选择职称</option>
+                <option v-for="pos in positions" :key="pos" :value="pos">{{ pos }}</option>
+              </select>
+              <p v-if="errors.position" class="mt-1 text-sm text-red-600">{{ errors.position }}</p>
+            </div>
 
-              <!-- 职称 -->
-              <div>
-                <label for="position" class="block text-sm font-medium text-gray-700 mb-1">
-                  职称/职务 <span class="text-red-500">*</span>
-                </label>
-                <select
-                  id="position"
-                  v-model="form.position"
-                  required
-                  class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.position }"
-                >
-                  <option value="">请选择职称</option>
-                  <option v-for="pos in positions" :key="pos" :value="pos">{{ pos }}</option>
-                </select>
-                <p v-if="errors.position" class="mt-1 text-sm text-red-600">{{ errors.position }}</p>
-              </div>
+            <!-- 员工状态 -->
+            <div>
+              <label for="status" class="block text-sm font-medium text-gray-700 mb-1">
+                员工状态 <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="status"
+                v-model="form.status"
+                required
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.status }"
+              >
+                <option value="">请选择状态</option>
+                <option value="active">在职</option>
+                <option value="on_leave">休假</option>
+                <option value="terminated">离职</option>
+              </select>
+              <p v-if="errors.status" class="mt-1 text-sm text-red-600">{{ errors.status }}</p>
+            </div>
 
-              <!-- 基础工资 -->
-              <div class="md:col-span-2">
-                <label for="base_salary" class="block text-sm font-medium text-gray-700 mb-1">
-                  基础工资 <span class="text-red-500">*</span>
-                </label>
-                <div class="relative">
-                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span class="text-gray-500 sm:text-sm">¥</span>
-                  </div>
-                  <input
-                    id="base_salary"
-                    v-model.number="form.base_salary"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    required
-                    class="block w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
-                    :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.base_salary }"
-                    placeholder="请输入基础工资"
-                  />
+            <!-- 办公地点 -->
+            <div>
+              <label for="location" class="block text-sm font-medium text-gray-700 mb-1">
+                办公地点
+              </label>
+              <input
+                id="location"
+                v-model="form.location"
+                type="text"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                placeholder="请输入办公地点"
+              />
+            </div>
+
+            <!-- 基础工资 -->
+            <div class="md:col-span-2">
+              <label for="base_salary" class="block text-sm font-medium text-gray-700 mb-1">
+                基础工资 <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span class="text-gray-500 sm:text-sm">¥</span>
                 </div>
-                <p v-if="errors.base_salary" class="mt-1 text-sm text-red-600">{{ errors.base_salary }}</p>
-                <p class="mt-1 text-sm text-gray-500">基础工资将用于薪资计算</p>
+                <input
+                  id="base_salary"
+                  v-model.number="form.base_salary"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  class="block w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                  :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': errors.base_salary }"
+                  placeholder="请输入基础工资"
+                />
               </div>
+              <p v-if="errors.base_salary" class="mt-1 text-sm text-red-600">{{ errors.base_salary }}</p>
+              <p class="mt-1 text-sm text-gray-500">基础工资将用于薪资计算</p>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- 操作按钮 -->
-        <div class="flex justify-end space-x-4">
-          <NuxtLink
-            to="/employees"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
-          >
-            取消
-          </NuxtLink>
-          <button
-            type="submit"
-            :disabled="submitting"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <div v-if="submitting" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-            {{ submitting ? '保存中...' : '保存修改' }}
-          </button>
-        </div>
-      </form>
-    </div>
+      <!-- 操作按钮 -->
+      <div class="flex justify-end space-x-4">
+        <NuxtLink
+          to="/employees"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
+        >
+          取消
+        </NuxtLink>
+        <button
+          type="submit"
+          :disabled="submitting"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <div v-if="submitting" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+          {{ submitting ? '保存中...' : '保存修改' }}
+        </button>
+      </div>
+    </form>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 
-// 使用API
-const employeeApi = useEmployeeApi()
-const departmentApi = useDepartmentApi()
+// 页面元数据
+definePageMeta({
+  layout: 'default'
+})
 
 // 获取路由参数
 const route = useRoute()
 const employeeId = route.params.id
 
+// 使用API
+const employeeApi = useEmployeeApi()
+const departmentApi = useDepartmentApi()
+
 // 响应式数据
 const loading = ref(true)
 const submitting = ref(false)
-const employee = ref(null)
 
 // 表单数据
 const form = reactive({
@@ -274,6 +294,8 @@ const form = reactive({
   hire_date: '',
   department_ref: '',
   position: '',
+  status: '',
+  location: '',
   base_salary: null
 })
 
@@ -282,6 +304,28 @@ const errors = ref({})
 
 // 选项数据
 const departments = ref([])
+
+const positions = ref([
+  '总经理',
+  '副总经理',
+  '部门经理',
+  '高级工程师',
+  '工程师',
+  '初级工程师',
+  '人事经理',
+  '人事专员',
+  '财务经理',
+  '会计师',
+  '出纳',
+  '市场经理',
+  '市场专员',
+  '运营经理',
+  '运营专员',
+  '客服主管',
+  '客服专员',
+  '行政主管',
+  '行政专员'
+])
 
 // 获取部门列表
 const fetchDepartments = async () => {
@@ -295,49 +339,41 @@ const fetchDepartments = async () => {
   }
 }
 
-// 加载员工信息
-const loadEmployee = async () => {
+// 获取员工信息
+const fetchEmployee = async () => {
   loading.value = true
   try {
-    // 模拟 API 调用
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // 模拟员工数据
-    const mockEmployee = {
-      id: employeeId,
-      employee_id: 'EMP001',
-      name: '张三',
-      gender: 'M',
-      phone: '13800138001',
-      birth_date: '1990-05-20',
-      hire_date: '2023-01-15',
-      department: '技术部',
-      position: '高级工程师',
-      base_salary: 15000
-    }
-    
-    // 检查员工是否存在
-    if (employeeId === '1') {
-      employee.value = mockEmployee
-      
+    const response = await employeeApi.getEmployeeById(employeeId)
+    if (response.success) {
+      const employee = response.data
       // 填充表单数据
       Object.keys(form).forEach(key => {
-        if (mockEmployee[key] !== undefined) {
-          form[key] = mockEmployee[key]
+        if (employee[key] !== undefined) {
+          form[key] = employee[key]
         }
       })
+      
+      // 处理日期格式
+      if (employee.birth_date) {
+        form.birth_date = employee.birth_date.split('T')[0]
+      }
+      if (employee.hire_date) {
+        form.hire_date = employee.hire_date.split('T')[0]
+      }
     } else {
-      employee.value = null
+      console.error('Failed to fetch employee:', response.error)
+      // 可以跳转到404页面或显示错误信息
+      await navigateTo('/employees')
     }
   } catch (error) {
-    console.error('加载员工信息失败:', error)
-    employee.value = null
+    console.error('Error fetching employee:', error)
+    await navigateTo('/employees')
   } finally {
     loading.value = false
   }
 }
 
-// 表单验证 (与添加页面相同的验证逻辑)
+// 表单验证
 const validateForm = () => {
   errors.value = {}
   
@@ -407,6 +443,11 @@ const validateForm = () => {
     errors.value.position = '请选择职称'
   }
   
+  // 状态验证
+  if (!form.status) {
+    errors.value.status = '请选择员工状态'
+  }
+  
   // 基础工资验证
   if (!form.base_salary || form.base_salary <= 0) {
     errors.value.base_salary = '请输入有效的基础工资'
@@ -428,35 +469,59 @@ const submitForm = async () => {
   submitting.value = true
   
   try {
-    // 模拟 API 调用
-    console.log('更新员工信息:', { id: employeeId, ...form })
-    
-    // 模拟网络延迟
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // 模拟后端验证错误 (工号重复，但排除当前员工)
-    if (form.employee_id === 'EMP002' && form.employee_id !== employee.value.employee_id) {
-      errors.value.employee_id = '该工号已存在，请使用其他工号'
-      return
+    // 准备提交的数据
+    const employeeData = {
+      name: form.name.trim(),
+      employee_id: form.employee_id.trim(),
+      gender: form.gender,
+      phone: form.phone.trim(),
+      birth_date: form.birth_date,
+      hire_date: form.hire_date,
+      department_ref: form.department_ref,
+      position: form.position,
+      status: form.status,
+      location: form.location || '北京总部',
+      base_salary: form.base_salary
     }
     
-    // 成功后跳转到员工列表
-    await navigateTo('/employees')
+    console.log('更新员工信息:', employeeData)
     
-    // 显示成功提示 (后续实现)
-    console.log('员工信息更新成功')
+    // 调用API更新员工
+    const response = await employeeApi.updateEmployee(employeeId, employeeData)
+    
+    if (response.success) {
+      // 成功后跳转到员工列表
+      await navigateTo('/employees')
+      console.log('员工信息更新成功')
+    } else {
+      // 处理API返回的错误
+      if (response.errors) {
+        // 如果有字段级别的错误，显示在对应字段下
+        Object.keys(response.errors).forEach(field => {
+          if (errors.value.hasOwnProperty(field)) {
+            errors.value[field] = Array.isArray(response.errors[field]) 
+              ? response.errors[field][0] 
+              : response.errors[field]
+          }
+        })
+      } else {
+        // 通用错误处理
+        console.error('更新员工失败:', response.error)
+        // 可以在这里添加全局错误提示
+      }
+    }
     
   } catch (error) {
     console.error('更新员工失败:', error)
-    // 显示错误提示 (后续实现)
+    // 显示错误提示
   } finally {
     submitting.value = false
   }
 }
 
-// 生命周期
-onMounted(() => {
-  loadEmployee()
-  fetchDepartments()
+// 初始化
+onMounted(async () => {
+  await fetchDepartments()
+  await fetchEmployee()
 })
 </script> 

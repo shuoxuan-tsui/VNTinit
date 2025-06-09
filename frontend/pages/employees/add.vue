@@ -247,7 +247,7 @@ const form = reactive({
   birth_date: '',
   hire_date: '',
   department_ref: '',
-  position: '',
+  position: '?',
   base_salary: null
 })
 
@@ -255,7 +255,14 @@ const form = reactive({
 const errors = ref({})
 
 // 选项数据
-const departments = ref([])
+const departments = ref([
+  "人力资源部",
+  "客服部",
+  "技术部",
+  "市场部",
+  "财务部",
+  "采购部"
+])
 
 // 获取部门列表
 const fetchDepartments = async () => {
@@ -382,27 +389,51 @@ const submitForm = async () => {
   submitting.value = true
   
   try {
-    // 模拟 API 调用
-    console.log('提交员工信息:', form)
-    
-    // 模拟网络延迟
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // 模拟后端验证错误 (工号重复)
-    if (form.employee_id === 'EMP001') {
-      errors.value.employee_id = '该工号已存在，请使用其他工号'
-      return
+    // 准备提交的数据
+    const employeeData = {
+      name: form.name.trim(),
+      employee_id: form.employee_id.trim(),
+      gender: form.gender,
+      phone: form.phone.trim(),
+      birth_date: form.birth_date,
+      hire_date: form.hire_date,
+      department_ref: form.department_ref,
+      position: form.position,
+      base_salary: form.base_salary,
+      status: 'active', // 新员工默认为在职状态
+      location: '北京总部' // 默认位置，可以后续扩展为表单字段
     }
     
-    // 成功后跳转到员工列表
-    await navigateTo('/employees')
+    console.log('提交员工信息:', employeeData)
     
-    // 显示成功提示 (后续实现)
-    console.log('员工信息添加成功')
+    // 调用API创建员工
+    const response = await employeeApi.createEmployee(employeeData)
+    
+    if (response.success) {
+      // 成功后跳转到员工列表
+      await navigateTo('/employees')
+      console.log('员工信息添加成功')
+    } else {
+      // 处理API返回的错误
+      if (response.errors) {
+        // 如果有字段级别的错误，显示在对应字段下
+        Object.keys(response.errors).forEach(field => {
+          if (errors.value.hasOwnProperty(field)) {
+            errors.value[field] = Array.isArray(response.errors[field]) 
+              ? response.errors[field][0] 
+              : response.errors[field]
+          }
+        })
+      } else {
+        // 通用错误处理
+        console.error('添加员工失败:', response.error)
+        // 可以在这里添加全局错误提示
+      }
+    }
     
   } catch (error) {
     console.error('添加员工失败:', error)
-    // 显示错误提示 (后续实现)
+    // 显示错误提示
   } finally {
     submitting.value = false
   }

@@ -12,10 +12,16 @@
         <button
           v-if="isAdmin"
           @click="showCalculateModal = true"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-colors"
+          class="animated-button"
         >
-          <Icon name="heroicons:calculator" class="mr-2 h-4 w-4" />
-          计算并生成薪资
+          <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+            <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+          </svg>
+          <span class="text">计算并生成薪资</span>
+          <span class="circle"></span>
+          <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+            <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+          </svg>
         </button>
       </div>
     </div>
@@ -105,10 +111,16 @@
         <div class="mt-6" v-if="isAdmin">
           <button
             @click="showCalculateModal = true"
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-accent hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+            class="animated-button"
           >
-            <Icon name="heroicons:calculator" class="mr-2 h-4 w-4" />
-            计算并生成薪资
+            <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+              <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+            </svg>
+            <span class="text">计算并生成薪资</span>
+            <span class="circle"></span>
+            <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+              <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+            </svg>
           </button>
         </div>
       </div>
@@ -413,6 +425,11 @@ definePageMeta({
   layout: 'default'
 })
 
+// 使用API
+const salaryApi = useSalaryApi()
+const employeeApi = useEmployeeApi()
+const departmentApi = useDepartmentApi()
+
 // 响应式数据
 const loading = ref(false)
 const calculating = ref(false)
@@ -448,45 +465,10 @@ const calculateForm = reactive({
   deduction: 0
 })
 
-// 模拟数据
-const salaryRecords = ref([
-  {
-    id: 1,
-    employee_name: '张三',
-    employee_id: 'EMP001',
-    department: '技术部',
-    salary_period: '2024-01',
-    position_snapshot: '高级工程师',
-    base_salary_snapshot: 15000,
-    gross_salary: 15000,
-    bonus: 2000,
-    deduction: 500,
-    net_salary: 16500,
-    pay_date: '2024-02-01'
-  },
-  {
-    id: 2,
-    employee_name: '李四',
-    employee_id: 'EMP002',
-    department: '人事部',
-    salary_period: '2024-01',
-    position_snapshot: '人事专员',
-    base_salary_snapshot: 8000,
-    gross_salary: 8000,
-    bonus: 1000,
-    deduction: 200,
-    net_salary: 8800,
-    pay_date: '2024-02-01'
-  }
-])
-
-const employees = ref([
-  { id: 1, name: '张三', employee_id: 'EMP001' },
-  { id: 2, name: '李四', employee_id: 'EMP002' },
-  { id: 3, name: '王五', employee_id: 'EMP003' }
-])
-
-const departments = ref(['技术部', '人事部', '财务部', '市场部', '运营部'])
+// 数据
+const salaryRecords = ref([])
+const employees = ref([])
+const departments = ref([])
 
 // 用户权限
 const isAdmin = ref(true)
@@ -547,13 +529,65 @@ const visiblePages = computed(() => {
 const loadSalaryRecords = async () => {
   loading.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    pagination.value.totalItems = salaryRecords.value.length
-    pagination.value.totalPages = Math.ceil(pagination.value.totalItems / pagination.value.pageSize)
+    const apiParams = {
+      page: pagination.value.currentPage,
+      page_size: pagination.value.pageSize,
+      search: searchQuery.value,
+      department: filters.value.department,
+      salary_period: filters.value.salaryPeriod,
+      salary_range: filters.value.salaryRange,
+    }
+    
+    // 移除空的筛选参数
+    for (const key in apiParams) {
+      if (apiParams[key] === '' || apiParams[key] === null || apiParams[key] === undefined) {
+        delete apiParams[key]
+      }
+    }
+
+    const response = await salaryApi.getSalaries(apiParams)
+    if (response && response.results) {
+      salaryRecords.value = response.results
+      pagination.value.totalItems = response.count || response.results.length
+      pagination.value.totalPages = Math.ceil(pagination.value.totalItems / pagination.value.pageSize)
+    } else {
+      salaryRecords.value = []
+      pagination.value.totalItems = 0
+      pagination.value.totalPages = 0
+    }
   } catch (error) {
     console.error('加载薪资记录失败:', error)
+    salaryRecords.value = []
+    pagination.value.totalItems = 0
+    pagination.value.totalPages = 0
   } finally {
     loading.value = false
+  }
+}
+
+const loadEmployees = async () => {
+  try {
+    const response = await employeeApi.getEmployees()
+    if (response && response.results) {
+      employees.value = response.results.map(emp => ({
+        id: emp.id,
+        name: emp.name,
+        employee_id: emp.employee_id
+      }))
+    }
+  } catch (error) {
+    console.error('加载员工列表失败:', error)
+  }
+}
+
+const loadDepartments = async () => {
+  try {
+    const response = await departmentApi.getDepartments()
+    if (response && response.results) {
+      departments.value = response.results.map(dept => dept.name)
+    }
+  } catch (error) {
+    console.error('加载部门列表失败:', error)
   }
 }
 
@@ -621,27 +655,19 @@ const calculateSalary = async () => {
   calculating.value = true
   try {
     console.log('计算薪资:', calculateForm)
-    await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // 模拟生成新的薪资记录
-    const newRecord = {
-      id: Date.now(),
-      employee_name: employees.value.find(emp => emp.id == calculateForm.employeeId)?.name || '',
-      employee_id: employees.value.find(emp => emp.id == calculateForm.employeeId)?.employee_id || '',
-      department: '技术部',
-      salary_period: calculateForm.salaryPeriod,
-      position_snapshot: '工程师',
-      base_salary_snapshot: 10000,
-      gross_salary: 10000,
-      bonus: calculateForm.bonus || 0,
-      deduction: calculateForm.deduction || 0,
-      net_salary: 10000 + (calculateForm.bonus || 0) - (calculateForm.deduction || 0),
-      pay_date: new Date().toISOString().split('T')[0]
+    // 调用API生成薪资
+    const response = await salaryApi.generateSalaries(calculateForm.salaryPeriod)
+    
+    if (response.success) {
+      // 重新加载薪资记录
+      await loadSalaryRecords()
+      closeCalculateModal()
+      console.log('薪资计算完成')
+    } else {
+      console.error('薪资计算失败:', response.error)
+      // 可以在这里添加错误提示
     }
-    
-    salaryRecords.value.unshift(newRecord)
-    closeCalculateModal()
-    console.log('薪资计算完成')
   } catch (error) {
     console.error('计算薪资失败:', error)
   } finally {
@@ -682,10 +708,130 @@ function debounce(func, wait) {
 
 // 生命周期
 onMounted(() => {
-  loadSalaryRecords()
+  if (process.client) {
+    // 尝试自动登录，如果未登录
+    const existingToken = localStorage.getItem('auth_token');
+    if (!existingToken) {
+      const config = useRuntimeConfig();
+      $fetch('/api/auth/login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: { username: 'admin', password: 'admin123' }
+      }).then(loginResponse => {
+        if (loginResponse && loginResponse.success && loginResponse.data && loginResponse.data.token) {
+          localStorage.setItem('auth_token', loginResponse.data.token);
+          localStorage.setItem('user_info', JSON.stringify(loginResponse.data.user));
+          console.log('Auto-login successful in salaries page');
+          loadSalaryRecords();
+          loadEmployees();
+          loadDepartments();
+        }
+      }).catch(err => {
+        console.error('Auto-login failed in salaries page:', err);
+        loadSalaryRecords();
+        loadEmployees();
+        loadDepartments();
+      });
+    } else {
+      loadSalaryRecords();
+      loadEmployees();
+      loadDepartments();
+    }
+  }
   
   // 设置默认薪资期间为当前月份
   const now = new Date()
   calculateForm.salaryPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 })
-</script> 
+</script>
+
+<style scoped>
+/* From Uiverse.io by mask_guy_0 */ 
+.animated-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 36px;
+  border: 4px solid;
+  border-color: transparent;
+  font-size: 16px;
+  background-color: inherit;
+  border-radius: 100px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 0 0 2px white;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button svg {
+  position: absolute;
+  width: 24px;
+  fill: white;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .arr-1 {
+  right: 16px;
+}
+
+.animated-button .arr-2 {
+  left: -25%;
+}
+
+.animated-button .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-12px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button:hover {
+  box-shadow: 0 0 0 12px transparent;
+  color: black;
+  border-radius: 12px;
+}
+
+.animated-button:hover .arr-1 {
+  right: -25%;
+}
+
+.animated-button:hover .arr-2 {
+  left: 16px;
+}
+
+.animated-button:hover .text {
+  transform: translateX(12px);
+}
+
+.animated-button:hover svg {
+  fill: #212121;
+}
+
+.animated-button:active {
+  scale: 0.95;
+  box-shadow: 0 0 0 4px white;
+}
+
+.animated-button:hover .circle {
+  width: 220px;
+  height: 220px;
+  opacity: 1;
+}
+</style> 

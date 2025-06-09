@@ -1979,3 +1979,175 @@ INFO 2025-06-09 15:29:44,849 basehttp 45515 140615551547072 "GET /api/department
 WARNING 2025-06-09 15:29:44,887 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
 WARNING 2025-06-09 15:29:44,887 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=code-bracket%2Ccurrency-dollar%2Cmegaphone%2Cphone HTTP/1.1" 404 8095
 INFO 2025-06-09 15:29:45,739 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:30:32,861 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:30:33,323 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:30:33,323 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=chevron-up-down%2Cprinter HTTP/1.1" 404 8070
+WARNING 2025-06-09 15:30:34,534 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:30:34,534 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=calendar-days%2Ccheck-circle%2Cexclamation-triangle%2Cx-circle HTTP/1.1" 404 8107
+WARNING 2025-06-09 15:30:35,431 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:30:35,431 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=star HTTP/1.1" 404 8049
+WARNING 2025-06-09 15:30:36,792 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:30:36,792 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=arrow-trending-up%2Cdocument-arrow-down%2Ctable-cells%2Cuser-minus HTTP/1.1" 404 8111
+INFO 2025-06-09 15:30:37,445 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:30:37,729 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:30:38,095 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:30:38,717 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:30:39,509 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:32:51,210 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:32:55,988 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:33:02,797 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:33:44,435 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+WARNING 2025-06-09 15:33:44,555 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:33:44,555 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=bars-arrow-down%2Ceye%2Cpencil%2Ctrash HTTP/1.1" 404 8083
+INFO 2025-06-09 15:35:39,055 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+WARNING 2025-06-09 15:35:39,181 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:35:39,182 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=bars-arrow-down%2Ceye%2Cpencil%2Ctrash HTTP/1.1" 404 8083
+WARNING 2025-06-09 15:35:41,618 log 45515 140615543154368 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:35:41,619 basehttp 45515 140615543154368 "GET /api/_nuxt_icon/heroicons.json?icons=chart-pie%2Cplus%2Cuser-group HTTP/1.1" 404 8074
+INFO 2025-06-09 15:35:41,628 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:35:41,686 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:35:41,686 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=code-bracket%2Ccurrency-dollar%2Cmegaphone%2Cphone HTTP/1.1" 404 8095
+WARNING 2025-06-09 15:35:42,083 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:35:42,084 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=arrow-path%2Carrow-up%2Ccalculator%2Ccalendar%2Cshield-check%2Csparkles%2Cwrench-screwdriver HTTP/1.1" 404 8137
+INFO 2025-06-09 15:35:45,404 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:35:45,811 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:35:46,906 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:35:46,906 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=chevron-up-down%2Cprinter HTTP/1.1" 404 8070
+INFO 2025-06-09 15:35:51,306 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:38:38,436 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:44:22,245 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:44:29,735 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:44:45,634 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:44:46,959 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:45:13,605 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+WARNING 2025-06-09 15:45:13,713 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:45:13,714 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=bars-arrow-down%2Ceye%2Cpencil%2Ctrash HTTP/1.1" 404 8083
+INFO 2025-06-09 15:45:48,538 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+WARNING 2025-06-09 15:45:48,674 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:45:48,675 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=bars-arrow-down%2Ceye%2Cpencil%2Ctrash HTTP/1.1" 404 8083
+INFO 2025-06-09 15:46:01,893 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:46:04,727 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+WARNING 2025-06-09 15:46:20,046 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:46:20,047 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=chevron-down%2Cmagnifying-glass%2Cuser-plus HTTP/1.1" 404 8088
+INFO 2025-06-09 15:46:37,130 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:46:37,138 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:46:37,414 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:46:37,425 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:46:37,444 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:46:37,462 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:46:37,476 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+WARNING 2025-06-09 15:46:37,497 log 45515 140615534761664 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:46:37,500 basehttp 45515 140615534761664 "GET /api/_nuxt_icon/heroicons.json?icons=bars-arrow-down%2Ceye%2Cpencil%2Ctrash HTTP/1.1" 404 8083
+INFO 2025-06-09 15:46:37,504 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:46:37,507 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:46:37,537 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:46:37,544 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:46:37,578 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:47:49,220 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:47:49,233 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:47:49,454 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:47:49,454 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=bars-arrow-down%2Ceye%2Cpencil%2Ctrash HTTP/1.1" 404 8083
+INFO 2025-06-09 15:51:46,933 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:51:46,941 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:51:47,097 log 45515 140615543154368 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:51:47,097 basehttp 45515 140615543154368 "GET /api/_nuxt_icon/heroicons.json?icons=bars-arrow-down%2Ceye%2Cpencil%2Ctrash HTTP/1.1" 404 8083
+WARNING 2025-06-09 15:51:56,425 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:51:56,425 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=chart-pie%2Cplus%2Cuser-group HTTP/1.1" 404 8074
+INFO 2025-06-09 15:51:56,438 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:51:56,481 log 45515 140615543154368 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:51:56,481 basehttp 45515 140615543154368 "GET /api/_nuxt_icon/heroicons.json?icons=code-bracket%2Ccurrency-dollar%2Cmegaphone%2Cphone HTTP/1.1" 404 8095
+INFO 2025-06-09 15:51:56,940 basehttp 45515 140615551547072 "GET /api/employees/ HTTP/1.1" 200 7065
+INFO 2025-06-09 15:51:56,945 basehttp 45515 140615543154368 "GET /api/salaries/?page=1&page_size=10 HTTP/1.1" 200 4641
+INFO 2025-06-09 15:51:56,951 basehttp 45515 140615534761664 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:51:57,031 log 45515 140615534761664 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:51:57,031 basehttp 45515 140615534761664 "GET /api/_nuxt_icon/heroicons.json?icons=chevron-left%2Cchevron-up-down%2Cprinter HTTP/1.1" 404 8085
+WARNING 2025-06-09 15:51:57,967 log 45515 140615534761664 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:51:57,967 basehttp 45515 140615534761664 "GET /api/_nuxt_icon/heroicons.json?icons=calendar-days%2Ccheck-circle%2Cexclamation-triangle%2Cx-circle HTTP/1.1" 404 8107
+INFO 2025-06-09 15:51:58,534 basehttp 45515 140615534761664 "GET /api/salaries/?page=1&page_size=10 HTTP/1.1" 200 4641
+INFO 2025-06-09 15:51:58,537 basehttp 45515 140615543154368 "GET /api/employees/ HTTP/1.1" 200 7065
+INFO 2025-06-09 15:51:58,544 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:52:02,203 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:52:02,210 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:54:49,991 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=10&ordering=-hire_date HTTP/1.1" 200 3571
+INFO 2025-06-09 15:54:49,995 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:55:05,999 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:55:06,287 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:55:07,301 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:55:07,305 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:55:14,442 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:55:14,462 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:55:15,023 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:55:15,030 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:55:22,810 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:55:22,822 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:55:23,194 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:55:23,206 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:55:30,178 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:55:30,183 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:55:30,690 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:55:30,696 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:55:39,555 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:55:39,561 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:56:01,777 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:56:01,786 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:56:02,691 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=1000&ordering=-hire_date HTTP/1.1" 200 7416
+INFO 2025-06-09 15:56:02,696 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:56:52,665 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=1000&include_all_status=true&ordering=-hire_date HTTP/1.1" 200 23058
+INFO 2025-06-09 15:56:52,669 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:56:52,907 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=1000&include_all_status=true&ordering=-hire_date HTTP/1.1" 200 23058
+INFO 2025-06-09 15:56:52,915 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:57:05,214 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=1000&include_all_status=true&ordering=-hire_date HTTP/1.1" 200 23058
+INFO 2025-06-09 15:57:05,223 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 15:57:06,188 basehttp 45515 140615543154368 "GET /api/employees/?page=1&page_size=1000&include_all_status=true&ordering=-hire_date HTTP/1.1" 200 23058
+INFO 2025-06-09 15:57:06,194 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:57:56,139 log 45515 140615551547072 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:57:56,140 basehttp 45515 140615551547072 "GET /api/_nuxt_icon/heroicons.json?icons=bars-arrow-up HTTP/1.1" 404 8058
+INFO 2025-06-09 15:57:59,060 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=1000&include_all_status=true&ordering=-hire_date HTTP/1.1" 200 23058
+INFO 2025-06-09 15:57:59,068 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:57:59,239 log 45515 140615543154368 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:57:59,240 basehttp 45515 140615543154368 "GET /api/_nuxt_icon/heroicons.json?icons=bars-arrow-down%2Cchevron-left%2Ceye%2Cpencil%2Ctrash HTTP/1.1" 404 8098
+WARNING 2025-06-09 15:58:10,074 log 45515 140615543154368 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:58:10,074 basehttp 45515 140615543154368 "GET /api/_nuxt_icon/heroicons.json?icons=arrow-path%2Carrow-up%2Ccalculator%2Ccalendar%2Cshield-check%2Csparkles%2Cwrench-screwdriver HTTP/1.1" 404 8137
+WARNING 2025-06-09 15:58:11,992 log 45515 140615526368960 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:58:11,993 basehttp 45515 140615526368960 "GET /api/_nuxt_icon/heroicons.json?icons=currency-dollar HTTP/1.1" 404 8060
+INFO 2025-06-09 15:58:12,002 basehttp 45515 140615551547072 "GET /api/employees/ HTTP/1.1" 200 7065
+INFO 2025-06-09 15:58:12,003 basehttp 45515 140615543154368 "GET /api/salaries/?page=1&page_size=10 HTTP/1.1" 200 4641
+INFO 2025-06-09 15:58:12,011 basehttp 45515 140615534761664 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:58:12,078 log 45515 140615534761664 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:58:12,078 basehttp 45515 140615534761664 "GET /api/_nuxt_icon/heroicons.json?icons=chevron-up-down%2Cprinter HTTP/1.1" 404 8070
+INFO 2025-06-09 15:58:14,662 basehttp 45515 140615534761664 "GET /api/salaries/?page=1&page_size=10&department=%E4%BA%BA%E5%8A%9B%E8%B5%84%E6%BA%90%E9%83%A8 HTTP/1.1" 200 4673
+INFO 2025-06-09 15:58:16,209 basehttp 45515 140615534761664 "GET /api/salaries/?page=1&page_size=10 HTTP/1.1" 200 4641
+INFO 2025-06-09 15:58:17,475 basehttp 45515 140615534761664 "GET /api/salaries/?page=1&page_size=10 HTTP/1.1" 200 4641
+WARNING 2025-06-09 15:58:17,529 log 45515 140615534761664 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:58:17,529 basehttp 45515 140615534761664 "GET /api/_nuxt_icon/heroicons.json?icons=chevron-up HTTP/1.1" 404 8055
+INFO 2025-06-09 15:58:19,304 basehttp 45515 140615534761664 "GET /api/salaries/?page=1&page_size=10 HTTP/1.1" 200 4641
+INFO 2025-06-09 15:58:19,699 basehttp 45515 140615534761664 "GET /api/salaries/?page=1&page_size=10&search=%E7%BD%97 HTTP/1.1" 200 2806
+INFO 2025-06-09 15:58:21,889 basehttp 45515 140615534761664 "GET /api/salaries/?page=1&page_size=10 HTTP/1.1" 200 4641
+INFO 2025-06-09 15:58:23,544 basehttp 45515 140615534761664 "GET /api/employees/?page=1&page_size=1000&include_all_status=true&ordering=-hire_date HTTP/1.1" 200 23058
+INFO 2025-06-09 15:58:23,549 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:58:24,640 log 45515 140615534761664 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:58:24,640 basehttp 45515 140615534761664 "GET /api/_nuxt_icon/heroicons.json?icons=arrow-left HTTP/1.1" 404 8055
+INFO 2025-06-09 15:58:24,651 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:59:28,038 log 45515 140615534761664 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:59:28,038 basehttp 45515 140615534761664 "GET /api/_nuxt_icon/heroicons.json?icons=chart-pie%2Cplus%2Cuser-group HTTP/1.1" 404 8074
+INFO 2025-06-09 15:59:28,055 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+WARNING 2025-06-09 15:59:28,116 log 45515 140615543154368 Not Found: /api/_nuxt_icon/heroicons.json
+WARNING 2025-06-09 15:59:28,117 basehttp 45515 140615543154368 "GET /api/_nuxt_icon/heroicons.json?icons=code-bracket%2Cmegaphone%2Cphone HTTP/1.1" 404 8077
+INFO 2025-06-09 16:00:25,264 basehttp 45515 140615534761664 "GET /api/employees/ HTTP/1.1" 200 7065
+INFO 2025-06-09 16:00:25,265 basehttp 45515 140615543154368 "GET /api/salaries/?page=1&page_size=10 HTTP/1.1" 200 4641
+INFO 2025-06-09 16:00:25,273 basehttp 45515 140615551547072 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:00:30,078 basehttp 45515 140615551547072 "GET /api/salaries/?page=1&page_size=10&department=%E4%BA%BA%E5%8A%9B%E8%B5%84%E6%BA%90%E9%83%A8 HTTP/1.1" 200 4673
+INFO 2025-06-09 16:00:32,139 basehttp 45515 140615551547072 "GET /api/employees/?page=1&page_size=1000&include_all_status=true&ordering=-hire_date HTTP/1.1" 200 23058
+INFO 2025-06-09 16:00:32,146 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:00:33,299 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:00:52,165 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:00:55,847 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:00:56,737 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:01:04,997 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:01:09,047 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:01:15,044 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:01:16,897 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:08:33,235 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:08:33,511 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:08:35,378 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492
+INFO 2025-06-09 16:08:35,654 basehttp 45515 140615543154368 "GET /api/departments/ HTTP/1.1" 200 2492

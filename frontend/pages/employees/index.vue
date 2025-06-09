@@ -19,10 +19,16 @@
         <NuxtLink
           v-if="isAdmin"
           to="/employees/add"
-          class="inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-semibold rounded-lg shadow-md text-white bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transform hover:scale-105 transition-all duration-200"
+          class="animated-button"
         >
-          <Icon name="heroicons:plus" class="mr-2 h-4 w-4" />
-          添加员工
+          <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+            <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+          </svg>
+          <span class="text">添加员工</span>
+          <span class="circle"></span>
+          <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+            <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+          </svg>
         </NuxtLink>
       </div>
     </div>
@@ -229,10 +235,16 @@
           <NuxtLink
             v-if="isAdmin"
             to="/employees/add"
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            class="animated-button"
           >
-            <Icon name="heroicons:plus" class="mr-2 h-4 w-4" />
-            添加员工
+            <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+              <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+            </svg>
+            <span class="text">添加员工</span>
+            <span class="circle"></span>
+            <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+              <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+            </svg>
           </NuxtLink>
         </div>
       </div>
@@ -374,7 +386,8 @@
                 <span class="font-medium">{{ Math.min(currentPage * pageSize, filteredEmployees.length) }}</span>
                 条，共
                 <span class="font-medium">{{ filteredEmployees.length }}</span>
-                条记录 (总 {{ totalServerEmployees }})
+                条记录
+                <span v-if="filteredEmployees.length !== totalServerEmployees">(总 {{ totalServerEmployees }} 条)</span>
               </p>
             </div>
             <div>
@@ -478,9 +491,12 @@ const {
   deleteEmployee: apiDeleteEmployee 
 } = useEmployeeApi()
 
+const { getDepartments } = useDepartmentApi()
+
 // 响应式数据
 const allEmployees = ref([]) // 将从API获取
 const totalServerEmployees = ref(0) // API返回的总员工数
+const departments = ref([]) // 部门列表
 const loading = ref(true)
 const deleting = ref(false)
 const searchQuery = ref('')
@@ -523,10 +539,11 @@ const tableColumns = [
 const fetchEmployees = async () => {
   loading.value = true
   try {
-    // 准备API参数 (将来用于后端分页、排序、筛选)
+    // 准备API参数 - 获取所有员工数据用于前端处理
     const apiParams = {
-      page: currentPage.value,
-      page_size: pageSize.value,
+      page: 1,
+      page_size: 1000, // 设置一个足够大的数字来获取所有员工
+      include_all_status: 'true', // 包含所有状态的员工
       ordering: (sort.value.direction === 'desc' ? '-' : '') + sort.value.field,
       search: searchQuery.value,
       department: filters.value.department,
@@ -542,10 +559,19 @@ const fetchEmployees = async () => {
       }
     }
 
+    console.log('Fetching employees with params:', apiParams)
     const response = await getEmployees(apiParams)
+    console.log('API response:', response)
+    
     if (response && response.results) {
       allEmployees.value = response.results
       totalServerEmployees.value = response.count || response.results.length;
+      console.log(`Loaded ${allEmployees.value.length} employees, total: ${totalServerEmployees.value}`)
+    } else if (response && Array.isArray(response)) {
+      // 如果API直接返回数组而不是分页对象
+      allEmployees.value = response
+      totalServerEmployees.value = response.length;
+      console.log(`Loaded ${allEmployees.value.length} employees (direct array)`)
     } else {
       allEmployees.value = []
       totalServerEmployees.value = 0;
@@ -616,26 +642,20 @@ const filteredEmployees = computed(() => {
 })
 
 const paginatedEmployees = computed(() => {
-  // 如果后端分页，filteredEmployees 将直接是当前页的数据
-  // 如果前端分页，则需要 slice
-  // 假设后端已经做了分页，直接返回 filteredEmployees (即allEmployees.value)
-  return filteredEmployees.value;
-  // 如果是前端分页，则使用以下逻辑：
-  // const start = (currentPage.value - 1) * pageSize.value
-  // const end = start + pageSize.value
-  // return filteredEmployees.value.slice(start, end)
+  // 前端分页逻辑
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredEmployees.value.slice(start, end)
 })
 
 const totalPages = computed(() => {
-  // 如果后端分页，totalServerEmployees 应该是API返回的总数
-  return Math.ceil(totalServerEmployees.value / pageSize.value)
-  // 如果前端分页，则使用以下逻辑：
-  // return Math.ceil(filteredEmployees.value.length / pageSize.value)
+  // 前端分页，基于筛选后的结果
+  return Math.ceil(filteredEmployees.value.length / pageSize.value)
 })
 
 const uniqueDepartments = computed(() => {
-  const depts = new Set(allEmployees.value.map(emp => emp.department).filter(Boolean))
-  return Array.from(depts).sort()
+  // 从departments数据中获取部门列表，而不是从员工数据中提取
+  return departments.value.map(dept => dept.name).sort()
 })
 
 const uniquePositions = computed(() => {
@@ -659,8 +679,22 @@ const averageSalary = computed(() => {
   return Math.round(totalSalary / allEmployees.value.length)
 })
 
-// 监控筛选和排序变化，重新获取数据
-watch([searchQuery, filters, sort, currentPage, pageSize], fetchEmployees, { deep: true })
+// 获取部门数据
+const fetchDepartments = async () => {
+  try {
+    const response = await getDepartments()
+    if (response && response.results) {
+      departments.value = response.results
+    }
+  } catch (error) {
+    console.error('Error fetching departments:', error)
+  }
+}
+
+// 监控筛选变化，重置到第一页
+watch([searchQuery, filters], () => {
+  currentPage.value = 1
+}, { deep: true })
 
 // 初始化时获取数据
 onMounted(() => {
@@ -679,13 +713,16 @@ onMounted(() => {
           localStorage.setItem('user_info', JSON.stringify(loginResponse.data.user));
           console.log('Auto-login successful in employees page');
           fetchEmployees(); // 登录成功后获取员工数据
+          fetchDepartments(); // 获取部门数据
         }
       }).catch(err => {
         console.error('Auto-login failed in employees page:', err);
         fetchEmployees(); // 即使登录失败，也尝试获取员工（如果API允许匿名访问部分数据）
+        fetchDepartments(); // 获取部门数据
       });
     } else {
       fetchEmployees(); // 已有token，直接获取员工数据
+      fetchDepartments(); // 获取部门数据
     }
   }
 });
@@ -715,7 +752,7 @@ const toggleSort = (field) => {
     sort.value.direction = 'asc'
   }
   currentPage.value = 1 // 排序变化时回到第一页
-  // fetchEmployees() 会被 watch 自动触发
+  // 前端排序，不需要重新请求API
 }
 
 const getSortIcon = (field) => {
@@ -726,7 +763,7 @@ const getSortIcon = (field) => {
 const changePage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page
-    // fetchEmployees() 会被 watch 自动触发
+    // 前端分页，不需要重新请求API
   }
 }
 
@@ -829,4 +866,95 @@ const exportEmployees = () => {
   document.body.removeChild(link);
 };
 
-</script> 
+</script>
+
+<style scoped>
+/* From Uiverse.io by mask_guy_0 */ 
+.animated-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 36px;
+  border: 4px solid;
+  border-color: #3b82f6;
+  font-size: 16px;
+  background-color: #3b82f6;
+  border-radius: 100px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 0 0 2px #3b82f6;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button svg {
+  position: absolute;
+  width: 24px;
+  fill: white;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .arr-1 {
+  right: 16px;
+}
+
+.animated-button .arr-2 {
+  left: -25%;
+}
+
+.animated-button .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-12px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button:hover {
+  box-shadow: 0 0 0 12px transparent;
+  color: black;
+  border-radius: 12px;
+}
+
+.animated-button:hover .arr-1 {
+  right: -25%;
+}
+
+.animated-button:hover .arr-2 {
+  left: 16px;
+}
+
+.animated-button:hover .text {
+  transform: translateX(12px);
+}
+
+.animated-button:hover svg {
+  fill: #212121;
+}
+
+.animated-button:active {
+  scale: 0.95;
+  box-shadow: 0 0 0 4px white;
+}
+
+.animated-button:hover .circle {
+  width: 220px;
+  height: 220px;
+  opacity: 1;
+}
+</style> 

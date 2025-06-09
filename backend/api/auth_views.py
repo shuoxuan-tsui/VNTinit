@@ -148,7 +148,7 @@ class RegisterView(APIView):
         
         # 6. 创建用户(使用事务保证数据一致性)
         try:
-            with transaction.atomic():
+            with transaction.atomic(): #事务的原子性，要么全部成功要么全部失败，postgresql 用的应该是commit + rollback？
                 # 使用Django的create_user方法创建用户(会自动处理密码哈希)
                 user = User.objects.create_user(
                     username=username,

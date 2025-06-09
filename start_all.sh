@@ -18,15 +18,15 @@ check_port() {
 # 启动后端Django服务
 start_backend() {
     echo "📡 启动后端Django服务..."
-    cd backend
+cd backend
     
     # 检查虚拟环境
     if [ ! -d "venv" ]; then
         echo "创建Python虚拟环境..."
         python3 -m venv venv
     fi
-    
-    # 激活虚拟环境
+
+# 激活虚拟环境
     source venv/bin/activate 2>/dev/null || echo "虚拟环境激活失败，使用系统Python"
     
     # 安装依赖
@@ -60,7 +60,7 @@ start_backend() {
 # 启动前端Nuxt服务
 start_frontend() {
     echo "🎨 启动前端Nuxt服务..."
-    cd frontend
+cd frontend
     
     # 检查Node.js
     if ! command -v node &> /dev/null; then
@@ -76,7 +76,7 @@ start_frontend() {
     
     # 启动服务
     echo "启动Nuxt开发服务器..."
-    npm run dev &
+npm run dev &
     FRONTEND_PID=$!
     
     # 等待服务启动
@@ -148,8 +148,8 @@ main() {
     if ! check_port 3000 "Nuxt前端"; then
         start_frontend || exit 1
     fi
-    
-    echo ""
+
+echo ""
     echo "🎉 所有服务启动完成！"
     echo ""
     echo "📋 服务信息:"
@@ -166,7 +166,7 @@ main() {
     echo "2. 点击'测试登录'按钮进行认证"
     echo "3. 点击'测试员工API'验证数据获取"
     echo "4. 然后访问正常的员工管理页面"
-    echo ""
+echo ""
     echo "🛑 停止服务: Ctrl+C 或运行 pkill -f 'manage.py runserver' && pkill -f 'nuxt'"
 }
 

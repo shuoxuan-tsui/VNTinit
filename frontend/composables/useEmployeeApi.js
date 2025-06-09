@@ -1,1 +1,114 @@
-export const useEmployeeApi = () => {\n  const config = useRuntimeConfig()\n  // const apiBase = config.public.apiBase // Nuxt 代理会自动处理，不需要 apiBase\n\n  const getAuthHeaders = () => {\n    if (process.client) {\n      const token = localStorage.getItem(\'auth_token\')\n      return token ? { \'Authorization\': `Token ${token}` } : {}\n    }\n    return {}\n  }\n\n  const getEmployees = async (params = {}) => {\n    try {\n      const response = await $fetch(\'/api/employees/\', {\n        method: \'GET\',\n        headers: {\n          \'Content-Type\': \'application/json\',\n          ...getAuthHeaders()\n        },\n        params: params // 用于将来的分页、排序、筛选\n      })\n      // API 返回的数据结构可能是 { success: true, data: { results: [], count: 0, ... } }\n      // 或者直接是 { results: [], count: 0, ... }\n      // 我们需要确保返回的是员工数组\n      if (response && response.success && response.data && Array.isArray(response.data.results)) {\n        return response.data // 返回包含 results, count 等的对象\n      } else if (Array.isArray(response)) { // 如果直接返回数组\n        return { results: response, count: response.length } \n      } else if (response && Array.isArray(response.results)) { // 如果返回对象包含results数组\n        return response\n      }\n      console.error(\'Invalid API response structure for getEmployees:\', response)\n      return { results: [], count: 0 } // 返回空数据结构以避免错误\n    } catch (error) {\n      console.error(\'Error fetching employees:\', error)\n      return { results: [], count: 0, error: error.message } // 附带错误信息\n    }\n  }\n\n  const getEmployeeById = async (id) => {\n    try {\n      const response = await $fetch(`/api/employees/${id}/`, {\n        method: \'GET\',\n        headers: {\n          \'Content-Type\': \'application/json\',\n          ...getAuthHeaders()\n        }\n      })\n      return response\n    } catch (error) {\n      console.error(`Error fetching employee ${id}:`, error)\n      return { success: false, error: error.message }\n    }\n  }\n  \n  const createEmployee = async (employeeData) => {\n    try {\n      const response = await $fetch(\'/api/employees/\', {\n        method: \'POST\',\n        headers: {\n          \'Content-Type\': \'application/json\',\n          ...getAuthHeaders()\n        },\n        body: employeeData\n      })\n      return response\n    } catch (error) {\n      console.error(\'Error creating employee:\', error)\n      return { success: false, error: error.message, errors: error.data?.errors || error.response?._data?.errors }\n    }\n  }\n\n  const updateEmployee = async (id, employeeData) => {\n    try {\n      const response = await $fetch(`/api/employees/${id}/`, {\n        method: \'PUT\',\n        headers: {\n          \'Content-Type\': \'application/json\',\n          ...getAuthHeaders()\n        },\n        body: employeeData\n      })\n      return response\n    } catch (error) {\n      console.error(`Error updating employee ${id}:`, error)\n      return { success: false, error: error.message, errors: error.data?.errors || error.response?._data?.errors }\n    }\n  }\n\n  const deleteEmployee = async (id) => {\n    try {\n      await $fetch(`/api/employees/${id}/`, {\n        method: \'DELETE\',\n        headers: {\n          \'Content-Type\': \'application/json\',\n          ...getAuthHeaders()\n        }\n      })\n      return { success: true }\n    } catch (error) {\n      console.error(`Error deleting employee ${id}:`, error)\n      return { success: false, error: error.message }\n    }\n  }\n\n  return {\n    getEmployees,\n    getEmployeeById,\n    createEmployee,\n    updateEmployee,\n    deleteEmployee\n  }\n}\n 
+export const useEmployeeApi = () => {
+  const config = useRuntimeConfig()
+  // const apiBase = config.public.apiBase // Nuxt 代理会自动处理，不需要 apiBase
+
+  const getAuthHeaders = () => {
+    if (process.client) {
+      const token = localStorage.getItem('auth_token')
+      return token ? { 'Authorization': `Token ${token}` } : {}
+    }
+    return {}
+  }
+
+  const getEmployees = async (params = {}) => {
+    try {
+      const response = await $fetch('/api/employees/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        params: params // 用于将来的分页、排序、筛选
+      })
+      // API 返回的数据结构可能是 { success: true, data: { results: [], count: 0, ... } }
+      // 或者直接是 { results: [], count: 0, ... }
+      // 我们需要确保返回的是员工数组
+      if (response && response.success && response.data && Array.isArray(response.data.results)) {
+        return response.data // 返回包含 results, count 等的对象
+      } else if (Array.isArray(response)) { // 如果直接返回数组
+        return { results: response, count: response.length } 
+      } else if (response && Array.isArray(response.results)) { // 如果返回对象包含results数组
+        return response
+      }
+      console.error('Invalid API response structure for getEmployees:', response)
+      return { results: [], count: 0 } // 返回空数据结构以避免错误
+    } catch (error) {
+      console.error('Error fetching employees:', error)
+      return { results: [], count: 0, error: error.message } // 附带错误信息
+    }
+  }
+
+  const getEmployeeById = async (id) => {
+    try {
+      const response = await $fetch(`/api/employees/${id}/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        }
+      })
+      return response
+    } catch (error) {
+      console.error(`Error fetching employee ${id}:`, error)
+      return { success: false, error: error.message }
+    }
+  }
+  
+  const createEmployee = async (employeeData) => {
+    try {
+      const response = await $fetch('/api/employees/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: employeeData
+      })
+      return response
+    } catch (error) {
+      console.error('Error creating employee:', error)
+      return { success: false, error: error.message, errors: error.data?.errors || error.response?._data?.errors }
+    }
+  }
+
+  const updateEmployee = async (id, employeeData) => {
+    try {
+      const response = await $fetch(`/api/employees/${id}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: employeeData
+      })
+      return response
+    } catch (error) {
+      console.error(`Error updating employee ${id}:`, error)
+      return { success: false, error: error.message, errors: error.data?.errors || error.response?._data?.errors }
+    }
+  }
+
+  const deleteEmployee = async (id) => {
+    try {
+      await $fetch(`/api/employees/${id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        }
+      })
+      return { success: true }
+    } catch (error) {
+      console.error(`Error deleting employee ${id}:`, error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  return {
+    getEmployees,
+    getEmployeeById,
+    createEmployee,
+    updateEmployee,
+    deleteEmployee
+  }
+} 

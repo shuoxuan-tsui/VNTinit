@@ -276,19 +276,26 @@
                   <Icon name="heroicons:chevron-left" class="h-5 w-5" />
                 </button>
                 
-                <button
-                  v-for="page in visiblePages"
-                  :key="page"
-                  @click="changePage(page)"
-                  :class="[
-                    'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
-                    page === pagination.currentPage
-                      ? 'z-10 bg-primary border-primary text-white'
-                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                  ]"
-                >
-                  {{ page }}
-                </button>
+                <template v-for="page in visiblePages" :key="page">
+                  <span
+                    v-if="page === '...'"
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                  >
+                    ...
+                  </span>
+                  <button
+                    v-else
+                    @click="changePage(page)"
+                    :class="[
+                      'relative inline-flex items-center px-4 py-2 border text-sm font-medium',
+                      page === pagination.currentPage
+                        ? 'z-10 bg-primary border-primary text-white'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    ]"
+                  >
+                    {{ page }}
+                  </button>
+                </template>
                 
                 <button
                   @click="changePage(pagination.currentPage + 1)"
@@ -329,14 +336,14 @@
                       <select
                         id="calc-employee"
                         v-model="calculateForm.employeeId"
-                        required
                         class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-accent focus:border-accent"
                       >
-                        <option value="">请选择员工</option>
+                        <option value="">为所有员工计算薪资</option>
                         <option v-for="emp in employees" :key="emp.id" :value="emp.id">
                           {{ emp.name }} ({{ emp.employee_id }})
                         </option>
                       </select>
+                      <p class="mt-1 text-sm text-gray-500">留空将为所有员工计算薪资</p>
                     </div>
 
                     <!-- 薪资期间 -->
@@ -503,12 +510,16 @@ const visiblePages = computed(() => {
       for (let i = 1; i <= 5; i++) {
         pages.push(i)
       }
-      pages.push('...')
-      pages.push(total)
+      if (total > 5) {
+        pages.push('...')
+        pages.push(total)
+      }
     } else if (current >= total - 3) {
       pages.push(1)
-      pages.push('...')
-      for (let i = total - 4; i <= total; i++) {
+      if (total > 5) {
+        pages.push('...')
+      }
+      for (let i = Math.max(total - 4, 1); i <= total; i++) {
         pages.push(i)
       }
     } else {
@@ -522,7 +533,7 @@ const visiblePages = computed(() => {
     }
   }
   
-  return pages.filter(page => page !== '...' || pages.indexOf(page) === pages.lastIndexOf(page))
+  return pages
 })
 
 // 方法
@@ -656,10 +667,23 @@ const calculateSalary = async () => {
   try {
     console.log('计算薪资:', calculateForm)
     
-    // 调用API生成薪资
-    const response = await salaryApi.generateSalaries(calculateForm.salaryPeriod)
+    // 准备薪资计算数据
+    const salaryData = {
+      salary_period: calculateForm.salaryPeriod,
+      bonus: calculateForm.bonus || 0,
+      deduction: calculateForm.deduction || 0
+    }
     
-    if (response.success) {
+    let response
+    if (calculateForm.employeeId) {
+      // 为特定员工计算薪资
+      response = await salaryApi.calculateSalary(calculateForm.employeeId, salaryData)
+    } else {
+      // 为所有员工生成薪资
+      response = await salaryApi.generateSalaries(salaryData)
+    }
+    
+    if (response.success || response.data) {
       // 重新加载薪资记录
       await loadSalaryRecords()
       closeCalculateModal()
@@ -676,10 +700,21 @@ const calculateSalary = async () => {
 }
 
 const formatCurrency = (amount) => {
+  // 处理空值、null、undefined和NaN
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    return '0.00'
+  }
+  
+  // 确保是数字类型
+  const numAmount = Number(amount)
+  if (isNaN(numAmount)) {
+    return '0.00'
+  }
+  
   return new Intl.NumberFormat('zh-CN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  }).format(amount)
+  }).format(numAmount)
 }
 
 const formatDate = (dateString) => {

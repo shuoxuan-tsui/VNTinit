@@ -101,7 +101,7 @@ export const useSalaryApi = () => {
     }
   }
 
-  const generateSalaries = async (period) => {
+  const generateSalaries = async (salaryData) => {
     try {
       const response = await $fetch('/api/salaries/generate/', {
         method: 'POST',
@@ -109,11 +109,28 @@ export const useSalaryApi = () => {
           'Content-Type': 'application/json',
           ...getAuthHeaders()
         },
-        body: { period }
+        body: salaryData
       })
       return response
     } catch (error) {
       console.error('Error generating salaries:', error)
+      return { success: false, error: error.message, errors: error.data?.errors || error.response?._data?.errors }
+    }
+  }
+
+  const calculateSalary = async (employeeId, salaryData) => {
+    try {
+      const response = await $fetch(`/api/salaries/calculate/${employeeId}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: salaryData
+      })
+      return response
+    } catch (error) {
+      console.error('Error calculating salary:', error)
       return { success: false, error: error.message, errors: error.data?.errors || error.response?._data?.errors }
     }
   }
@@ -124,6 +141,7 @@ export const useSalaryApi = () => {
     createSalary,
     updateSalary,
     deleteSalary,
-    generateSalaries
+    generateSalaries,
+    calculateSalary
   }
 } 

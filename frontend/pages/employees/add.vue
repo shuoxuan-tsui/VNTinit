@@ -212,10 +212,16 @@
         <button
           type="submit"
           :disabled="submitting"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          class="animated-button"
         >
-          <div v-if="submitting" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-          {{ submitting ? '保存中...' : '保存员工信息' }}
+          <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+            <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+          </svg>
+          <span class="text">{{ submitting ? '保存中...' : '保存员工信息' }}</span>
+          <span class="circle"></span>
+          <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+            <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+          </svg>
         </button>
       </div>
     </form>
@@ -255,24 +261,41 @@ const form = reactive({
 const errors = ref({})
 
 // 选项数据
-const departments = ref([
-  "人力资源部",
-  "客服部",
-  "技术部",
-  "市场部",
-  "财务部",
-  "采购部"
-])
+const departments = ref([])
 
 // 获取部门列表
 const fetchDepartments = async () => {
   try {
     const response = await departmentApi.getDepartments()
-    if (response.success) {
+    console.log('Department API response:', response)
+    
+    if (response && response.results && Array.isArray(response.results)) {
+      departments.value = response.results
+    } else if (response && response.success && response.data && Array.isArray(response.data.results)) {
       departments.value = response.data.results
+    } else {
+      console.error('Invalid department response structure:', response)
+      // 如果API失败，使用默认部门列表
+      departments.value = [
+        { id: 1, name: "人力资源部" },
+        { id: 2, name: "客服部" },
+        { id: 3, name: "技术部" },
+        { id: 4, name: "市场部" },
+        { id: 5, name: "财务部" },
+        { id: 6, name: "采购部" }
+      ]
     }
   } catch (error) {
     console.error('Error fetching departments:', error)
+    // 如果API失败，使用默认部门列表
+    departments.value = [
+      { id: 1, name: "人力资源部" },
+      { id: 2, name: "客服部" },
+      { id: 3, name: "技术部" },
+      { id: 4, name: "市场部" },
+      { id: 5, name: "财务部" },
+      { id: 6, name: "采购部" }
+    ]
   }
 }
 
@@ -445,4 +468,100 @@ onMounted(() => {
   form.hire_date = today.toISOString().split('T')[0]
   fetchDepartments()
 })
-</script> 
+</script>
+
+<style scoped>
+/* From Uiverse.io by mask_guy_0 */ 
+.animated-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 36px;
+  border: 4px solid #3b82f6;
+  border-color: #3b82f6;
+  font-size: 16px;
+  background-color: #3b82f6;
+  border-radius: 100px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 0 0 2px #3b82f6;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.animated-button svg {
+  position: absolute;
+  width: 24px;
+  fill: white;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .arr-1 {
+  right: 16px;
+}
+
+.animated-button .arr-2 {
+  left: -25%;
+}
+
+.animated-button .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-12px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button:hover:not(:disabled) {
+  box-shadow: 0 0 0 12px transparent;
+  color: black;
+  border-radius: 12px;
+}
+
+.animated-button:hover:not(:disabled) .arr-1 {
+  right: -25%;
+}
+
+.animated-button:hover:not(:disabled) .arr-2 {
+  left: 16px;
+}
+
+.animated-button:hover:not(:disabled) .text {
+  transform: translateX(12px);
+}
+
+.animated-button:hover:not(:disabled) svg {
+  fill: #212121;
+}
+
+.animated-button:active:not(:disabled) {
+  scale: 0.95;
+  box-shadow: 0 0 0 4px #3b82f6;
+}
+
+.animated-button:hover:not(:disabled) .circle {
+  width: 220px;
+  height: 220px;
+  opacity: 1;
+}
+</style> 

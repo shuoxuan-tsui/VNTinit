@@ -172,19 +172,19 @@
                 {{ record.position_snapshot }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                ¥{{ formatCurrency(record.base_salary_snapshot) }}
+                ¥{{ formatCurrency(record.base_salary_snapshot || record.base_salary) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                ¥{{ formatCurrency(record.gross_salary) }}
+                ¥{{ formatCurrency(record.gross_salary || calculateGrossSalary(record)) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span class="text-green-600">+¥{{ formatCurrency(record.bonus) }}</span>
+                <span class="text-green-600">+¥{{ formatCurrency(record.bonus || 0) }}</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span class="text-red-600">-¥{{ formatCurrency(record.deduction) }}</span>
+                <span class="text-red-600">-¥{{ formatCurrency(record.deduction || 0) }}</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                ¥{{ formatCurrency(record.net_salary) }}
+                ¥{{ formatCurrency(record.net_salary || calculateNetSalary(record)) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ formatDate(record.pay_date) }}
@@ -459,7 +459,7 @@ const sort = ref({
 // 分页
 const pagination = ref({
   currentPage: 1,
-  pageSize: 10,
+  pageSize: 20,
   totalItems: 0,
   totalPages: 0
 })
@@ -728,6 +728,20 @@ const formatSalaryPeriod = (period) => {
   return `${year}年${month}月`
 }
 
+// 计算应发工资
+const calculateGrossSalary = (record) => {
+  const baseSalary = Number(record.base_salary_snapshot || record.base_salary || 0)
+  const bonus = Number(record.bonus || 0)
+  return baseSalary + bonus
+}
+
+// 计算实发工资
+const calculateNetSalary = (record) => {
+  const grossSalary = record.gross_salary || calculateGrossSalary(record)
+  const deduction = Number(record.deduction || 0)
+  return Number(grossSalary) - deduction
+}
+
 // 防抖函数
 function debounce(func, wait) {
   let timeout
@@ -788,14 +802,14 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   padding: 16px 36px;
-  border: 4px solid;
-  border-color: transparent;
+  border: 4px solid #3b82f6;
+  border-color: #3b82f6;
   font-size: 16px;
-  background-color: inherit;
+  background-color: #3b82f6;
   border-radius: 100px;
   font-weight: 600;
   color: white;
-  box-shadow: 0 0 0 2px white;
+  box-shadow: 0 0 0 2px #3b82f6;
   cursor: pointer;
   overflow: hidden;
   transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);

@@ -7,7 +7,7 @@
 </template>
 
 <script setup>
-// 初始化认证状态
+// initialize auth state
 const authStore = useAuthStore()
 
 onMounted(() => {

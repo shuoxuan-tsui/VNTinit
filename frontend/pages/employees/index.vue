@@ -537,7 +537,7 @@ const tableColumns = [
 
 // 获取和处理员工数据
 const fetchEmployees = async () => {
-  loading.value = true
+  loading.value = true  
   try {
     // 准备API参数 - 获取所有员工数据用于前端处理
     const apiParams = {
@@ -559,38 +559,47 @@ const fetchEmployees = async () => {
       }
     }
 
+    // Log API request parameters for debugging
     console.log('Fetching employees with params:', apiParams)
+    
+    // Make API call to fetch employee data
     const response = await getEmployees(apiParams)
     console.log('API response:', response)
     
+    // Handle different response formats:
+    // 1. Standard paginated response (contains results and count)
     if (response && response.results) {
       allEmployees.value = response.results
+      // Use response.count if available, otherwise fallback to results length
       totalServerEmployees.value = response.count || response.results.length;
       console.log(`Loaded ${allEmployees.value.length} employees, total: ${totalServerEmployees.value}`)
-    } else if (response && Array.isArray(response)) {
-      // 如果API直接返回数组而不是分页对象
+    } 
+    // 2. Direct array response (non-paginated API)
+    else if (response && Array.isArray(response)) {
       allEmployees.value = response
       totalServerEmployees.value = response.length;
       console.log(`Loaded ${allEmployees.value.length} employees (direct array)`)
-    } else {
+    } 
+    // 3. Invalid response format
+    else {
       allEmployees.value = []
       totalServerEmployees.value = 0;
       console.error("Failed to fetch employees or invalid data structure", response);
     }
   } catch (error) {
+    // Handle any errors during API call
     console.error('Error fetching employees:', error)
     allEmployees.value = []
     totalServerEmployees.value = 0;
   } finally {
+    // Always reset loading state regardless of success/failure
     loading.value = false
   }
 }
 
-// 计算属性，用于前端筛选 (如果API不支持所有筛选，则保留此逻辑)
 const filteredEmployees = computed(() => {
   let employees = [...allEmployees.value]
 
-  // 搜索 (如果后端已实现，此部分可简化或移除)
   if (searchQuery.value) {
     const lowerSearchQuery = searchQuery.value.toLowerCase()
     employees = employees.filter(emp => 
@@ -600,34 +609,45 @@ const filteredEmployees = computed(() => {
     )
   }
 
-  // 筛选 (如果后端已实现，此部分可简化或移除)
+  // Filter by department if specified
   if (filters.value.department) {
     employees = employees.filter(emp => emp.department === filters.value.department)
   }
+
+  // Filter by position if specified
   if (filters.value.position) {
     employees = employees.filter(emp => emp.position === filters.value.position)
   }
+
+  // Filter by gender if specified
   if (filters.value.gender) {
     employees = employees.filter(emp => emp.gender === filters.value.gender)
   }
-  if (filters.value.hireYear) {
+
+  // Filter by hire year if specified
+  if (filters.value.hireYear) {4
     employees = employees.filter(emp => emp.hire_date && emp.hire_date.startsWith(filters.value.hireYear))
   }
+
+  // Filter by salary range if specified
   if (filters.value.salaryRange) {
+    // Parse min and max salary from the range string (format: "min-max")
     const [min, max] = filters.value.salaryRange.split('-').map(Number);
     employees = employees.filter(emp => {
       const salary = emp.base_salary;
+      // If max is specified, check if salary is between min and max
+      // Otherwise just check if salary is >= min
       if (max) return salary >= min && salary <= max;
       return salary >= min;
     });
   }
 
-  // 排序 (如果后端已实现，此部分可简化或移除)
+  // sort (if the backend has already implemented, this part can be simplified or removed)
   if (sort.value.field) {
     employees.sort((a, b) => {
       let valA = a[sort.value.field]
       let valB = b[sort.value.field]
-
+      // for case insensitivity, for example, the capital letters "Apple" and "apple" should be sorted together.
       if (typeof valA === 'string') valA = valA.toLowerCase();
       if (typeof valB === 'string') valB = valB.toLowerCase();
 
@@ -641,40 +661,53 @@ const filteredEmployees = computed(() => {
   return employees
 })
 
+// Computed property for paginated employee list
 const paginatedEmployees = computed(() => {
-  // 前端分页逻辑
+  // Calculate start and end indices for current page
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
+  // Return sliced array of filtered employees
   return filteredEmployees.value.slice(start, end)
 })
 
+// Computed property for total number of pages
 const totalPages = computed(() => {
-  // 前端分页，基于筛选后的结果
+  // Calculate total pages based on filtered employees count and page size
   return Math.ceil(filteredEmployees.value.length / pageSize.value)
 })
 
+// Computed property for unique department names
 const uniqueDepartments = computed(() => {
-  // 从departments数据中获取部门列表，而不是从员工数据中提取
+  // Extract and sort department names from departments data
   return departments.value.map(dept => dept.name).sort()
 })
 
+// Computed property for unique position names
 const uniquePositions = computed(() => {
+  // Get unique positions from all employees data
   const positions = new Set(allEmployees.value.map(emp => emp.position).filter(Boolean))
   return Array.from(positions).sort()
 })
 
+// Computed property for unique hire years
 const uniqueHireYears = computed(() => {
+  // Extract hire years from all employees and sort in descending order
   const years = new Set(allEmployees.value.map(emp => emp.hire_date ? emp.hire_date.substring(0, 4) : null).filter(Boolean))
-  return Array.from(years).sort((a, b) => b - a) // Sort descending
+  return Array.from(years).sort((a, b) => b - a)
 })
 
+// Computed property for new employees count in current month
 const newEmployeesThisMonth = computed(() => {
+  // Filter employees hired in current month
   const currentMonth = new Date().toISOString().substring(0, 7)
   return allEmployees.value.filter(emp => emp.hire_date && emp.hire_date.startsWith(currentMonth)).length
 })
 
+// Computed property for average salary calculation
 const averageSalary = computed(() => {
+  // Return 0 if no employees
   if (!allEmployees.value.length) return 0
+  // Calculate total salary and return rounded average
   const totalSalary = allEmployees.value.reduce((sum, emp) => sum + (emp.base_salary || 0), 0)
   return Math.round(totalSalary / allEmployees.value.length)
 })
@@ -690,6 +723,7 @@ const fetchDepartments = async () => {
     console.error('Error fetching departments:', error)
   }
 }
+
 
 // 监控筛选变化，重置到第一页
 watch([searchQuery, filters], () => {

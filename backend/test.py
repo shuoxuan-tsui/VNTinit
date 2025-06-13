@@ -65,7 +65,9 @@ class DataGenerator:
                    '150', '151', '152', '153', '155', '156', '157', '158', '159',
                    '180', '181', '182', '183', '184', '185', '186', '187', '188', '189']
         prefix = random.choice(prefixes)
+        # generate 8 random digits 
         suffix = ''.join([str(random.randint(0, 9)) for _ in range(8)])
+        # to construct a phone number
         return prefix + suffix
 
     def generate_employee_id(self):

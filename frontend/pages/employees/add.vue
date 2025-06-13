@@ -466,7 +466,37 @@ const submitForm = async () => {
 onMounted(() => {
   const today = new Date()
   form.hire_date = today.toISOString().split('T')[0]
-  fetchDepartments()
+  
+  // Check if running on client side (browser)
+  if (process.client) {
+    // Check if auth token exists in localStorage
+    const existingToken = localStorage.getItem('auth_token');
+    
+    // If no token exists, attempt auto-login with default admin credentials
+    if (!existingToken) {
+      $fetch('/api/auth/login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: { username: 'admin', password: 'admin123' }
+      }).then(loginResponse => {
+        // On successful login, store token and user info
+        if (loginResponse && loginResponse.success && loginResponse.data && loginResponse.data.token) {
+          localStorage.setItem('auth_token', loginResponse.data.token);
+          localStorage.setItem('user_info', JSON.stringify(loginResponse.data.user));
+          console.log('Auto-login successful in add employee page');
+          // Fetch departments after successful login
+          fetchDepartments();
+        }
+      }).catch(err => {
+        // Log error if auto-login fails but still attempt to fetch departments
+        console.error('Auto-login failed in add employee page:', err);
+        fetchDepartments();
+      });
+    } else {
+      // If token exists, directly fetch departments
+      fetchDepartments();
+    }
+  }
 })
 </script>
 

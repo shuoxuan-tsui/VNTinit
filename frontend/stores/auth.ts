@@ -24,17 +24,30 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 初始化认证状态
   const initAuth = () => {
+    // 检查是否在客户端执行。因为 cookie 是一个浏览器才有的特定概念，所以只能在客户端执行。
+    // 如果在服务器端直接访问 cookie 是会报错的
+    // process.client 是一个全局变量，表示当前代码是否在客户端执行
+    // 如果 process.client 为 true，则表示当前代码在客户端执行
+    // 如果 process.client 为 false，则表示当前代码在服务器端执行
+    // 在客户端执行时，检查是否存在 token 和 user 的 cookie
+    // 如果存在，则从 cookie 中恢复认证状态
+    // 如果不存在，则初始化认证状态为 null
+    // 在服务器端执行时，不进行任何操作
     if (process.client) {
       const tokenCookie = useCookie('auth-token')
       const userCookie = useCookie('user')
-      
+      // 检查 Cookie 中是否存在有效的令牌和用户数据
       if (tokenCookie.value && userCookie.value) {
+        // 如果存在，将 Cookie 中的令牌赋值给响应式变量 token
         token.value = tokenCookie.value as string
         try {
+          // 尝试解析用户数据
+        // 检查 userCookie.value 是否是字符串，如果是，则解析为 JSON 对象
           user.value = typeof userCookie.value === 'string' 
             ? JSON.parse(userCookie.value) 
             : userCookie.value as User
         } catch (e) {
+          // 如果解析失败，将用户状态设置为 null
           console.error('Failed to parse user cookie:', e)
           user.value = null
         }

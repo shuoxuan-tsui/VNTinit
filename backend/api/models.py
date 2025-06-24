@@ -142,6 +142,21 @@ class Employee(models.Model):
         null=True, 
         verbose_name='备注'
     )
+    # user = models.OneToOneRel(
+    #     User,
+    #     on_delete = models.SET_NULL,
+    #     null = True,
+    #     blank = True,
+    #     related_name=  'employee_profile',
+    #     verbose_name = '关联用户'
+    # )
+    # employee_id = models.CharField(
+    #     max_length=20,
+    #     unique = True,
+    #     verbose_name='工号',
+    #     help_text='员工唯一标识号'
+    # )
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
     

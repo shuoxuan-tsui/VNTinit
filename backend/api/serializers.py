@@ -58,16 +58,17 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 class EmployeeSerializer(serializers.ModelSerializer):
     """员工序列化器"""
-    department_name = serializers.CharField(source='department.name', read_only=True)
+    department_name = serializers.CharField(source='department_ref.name', read_only=True)
     
     class Meta:
         model = Employee
         fields = [
-            'id', 'employee_id', 'name', 'gender', 'department', 'department_name',
+            'id', 'employee_id', 'name', 'gender', 'department', 'department_ref', 'department_name',
             'position', 'phone', 'hire_date', 'birth_date', 
-            'base_salary', 'created_at', 'updated_at'
+            'base_salary', 'status', 'location', 'notes',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'department_name', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'department', 'department_name', 'created_at', 'updated_at']
     
     def validate_employee_id(self, value):
         """验证工号唯一性"""
@@ -177,14 +178,30 @@ class SalaryRecordSerializer(serializers.ModelSerializer):
 
 
 class SalaryCalculationSerializer(serializers.Serializer):
-    """薪资计算序列化器"""
+    """Serializer for salary calculation
+    
+    This serializer handles the validation of salary calculation data including:
+    - Employee ID validation
+    - Salary period format validation
+    - Bonus and deductions validation
+    """
     employee_id = serializers.CharField()
     salary_period = serializers.CharField()
     bonus = serializers.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     deductions = serializers.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     
     def validate_employee_id(self, value):
-        """验证员工ID"""
+        """Validate employee ID exists in database
+        
+        Args:
+            value: Employee ID string to validate
+            
+        Returns:
+            The validated employee ID if exists
+            
+        Raises:
+            serializers.ValidationError: If employee doesn't exist
+        """
         try:
             employee = Employee.objects.get(employee_id=value)
             return value
@@ -192,29 +209,69 @@ class SalaryCalculationSerializer(serializers.Serializer):
             raise serializers.ValidationError("员工不存在")
     
     def validate_salary_period(self, value):
-        """验证薪资期间格式"""
+        """Validate salary period format (YYYY-MM)
+        
+        Args:
+            value: Salary period string to validate
+            
+        Returns:
+            The validated salary period string
+            
+        Raises:
+            serializers.ValidationError: If format is invalid
+        """
         if not re.match(r'^\d{4}-\d{2}$', value):
             raise serializers.ValidationError("薪资期间格式应为 YYYY-MM")
         return value
     
     def validate_bonus(self, value):
-        """验证奖金"""
+        """Validate bonus is non-negative
+        
+        Args:
+            value: Bonus amount to validate
+            
+        Returns:
+            The validated bonus amount
+            
+        Raises:
+            serializers.ValidationError: If bonus is negative
+        """
         if value < 0:
             raise serializers.ValidationError("奖金不能为负数")
         return value
     
     def validate_deductions(self, value):
-        """验证扣除"""
+        """Validate deductions is non-negative
+        
+        Args:
+            value: Deductions amount to validate
+            
+        Returns:
+            The validated deductions amount
+            
+        Raises:
+            serializers.ValidationError: If deductions is negative
+        """
         if value < 0:
             raise serializers.ValidationError("扣除不能为负数")
         return value
 
-
 class UserSerializer(serializers.ModelSerializer):
-    """用户序列化器"""
+    """User serializer for handling user data
+    
+    This serializer handles the serialization/deserialization of User model data.
+    It includes basic user information and group membership details.
+    
+    Fields:
+        id: The unique identifier for the user (read-only)
+        username: The user's login name
+        email: The user's email address
+        is_superuser: Boolean indicating admin status (read-only)
+        groups: List of group names the user belongs to (read-only)
+    """
     groups = serializers.StringRelatedField(many=True, read_only=True)
     
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'is_superuser', 'groups']
-        read_only_fields = ['id', 'is_superuser', 'groups'] 
+        read_only_fields = ['id', 'is_superuser', 'groups']  # These fields cannot be modified via API

@@ -310,7 +310,6 @@ const positions = ref([
   '人事专员',
   '财务经理',
   '会计师',
-  '出纳',
   '市场经理',
   '市场专员',
   '运营经理',
@@ -512,6 +511,8 @@ onMounted(() => {
   border-color: #3b82f6;
   font-size: 16px;
   background-color: #3b82f6;
+
+  
   border-radius: 100px;
   font-weight: 600;
   color: white;

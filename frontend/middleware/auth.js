@@ -9,3 +9,15 @@ export default defineNuxtRouteMiddleware((to, from) => {
     return navigateTo('/login')
   }
 }) 
+
+// export function ({ store, redirect, router}) {
+//   if(!store.auth.isAuthenticated){
+//     return redirect('/login')
+//   }
+//   if(to.path === '/login' && store.auth.isAuthenticated){
+//     return redirect('/')
+//   }
+//   if(to.path === '/forgot-password' && store.auth.isAuthenticated){
+//     return redirect('/')
+//   }
+// }

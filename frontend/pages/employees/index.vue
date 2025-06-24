@@ -332,14 +332,24 @@
                     <Icon name="heroicons:eye" class="h-4 w-4" />
                   </button>
                   
-                  <!-- 编辑 (仅管理员) -->
+                  <!-- 快速编辑 (仅管理员) -->
+                  <button
+                    v-if="isAdmin"
+                    @click="openEditModal(employee)"
+                    class="text-accent hover:text-accent-dark transition-colors p-1 rounded"
+                    title="快速编辑"
+                  >
+                    <Icon name="heroicons:pencil" class="h-4 w-4" />
+                  </button>
+                  
+                  <!-- 详细编辑 (仅管理员) -->
                   <NuxtLink
                     v-if="isAdmin"
                     :to="`/employees/edit/${employee.id}`"
-                    class="text-accent hover:text-accent-dark transition-colors p-1 rounded"
-                    title="编辑"
+                    class="text-blue-600 hover:text-blue-800 transition-colors p-1 rounded"
+                    title="详细编辑"
                   >
-                    <Icon name="heroicons:pencil" class="h-4 w-4" />
+                    <Icon name="heroicons:cog-6-tooth" class="h-4 w-4" />
                   </NuxtLink>
                   
                   <!-- 删除 (仅管理员) -->
@@ -454,6 +464,7 @@
               </div>
             </div>
           </div>
+          <!-- set the button to disabled to prevent the user from click it again -->
           <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <button
               @click="deleteEmployeeAction"
@@ -466,6 +477,155 @@
             <button
               @click="closeDeleteModal"
               :disabled="deleting"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快速编辑模态框 -->
+    <div
+      v-if="showEditModal"
+      class="fixed inset-0 z-50 overflow-y-auto"
+      @click.self="closeEditModal"
+    >
+      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div class="sm:flex sm:items-start">
+              <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">快速编辑员工信息</h3>
+                
+                <form @submit.prevent="updateEmployeeAction" class="space-y-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- 姓名 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">姓名 *</label>
+                      <input
+                        v-model="editForm.name"
+                        type="text"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                        :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': editErrors.name }"
+                      />
+                      <p v-if="editErrors.name" class="mt-1 text-sm text-red-600">{{ editErrors.name }}</p>
+                    </div>
+
+                    <!-- 工号 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">工号 *</label>
+                      <input
+                        v-model="editForm.employee_id"
+                        type="text"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                        :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': editErrors.employee_id }"
+                      />
+                      <p v-if="editErrors.employee_id" class="mt-1 text-sm text-red-600">{{ editErrors.employee_id }}</p>
+                    </div>
+
+                    <!-- 性别 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">性别 *</label>
+                      <select
+                        v-model="editForm.gender"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                        :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': editErrors.gender }"
+                      >
+                        <option value="">请选择性别</option>
+                        <option value="M">男</option>
+                        <option value="F">女</option>
+                      </select>
+                      <p v-if="editErrors.gender" class="mt-1 text-sm text-red-600">{{ editErrors.gender }}</p>
+                    </div>
+
+                    <!-- 电话 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">电话号码 *</label>
+                      <input
+                        v-model="editForm.phone"
+                        type="tel"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                        :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': editErrors.phone }"
+                      />
+                      <p v-if="editErrors.phone" class="mt-1 text-sm text-red-600">{{ editErrors.phone }}</p>
+                    </div>
+
+                    <!-- 职称 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">职称</label>
+                      <select
+                        v-model="editForm.position"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                      >
+                        <option value="">请选择职称</option>
+                        <option v-for="pos in uniquePositions" :key="pos" :value="pos">{{ pos }}</option>
+                      </select>
+                    </div>
+
+                    <!-- 员工状态 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                      <select
+                        v-model="editForm.status"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                      >
+                        <option value="active">在职</option>
+                        <option value="on_leave">休假</option>
+                        <option value="terminated">离职</option>
+                      </select>
+                    </div>
+
+                    <!-- 基础工资 -->
+                    <div class="sm:col-span-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">基础工资 *</label>
+                      <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span class="text-gray-500 sm:text-sm">¥</span>
+                        </div>
+                        <input
+                          v-model.number="editForm.base_salary"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          class="block w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                          :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': editErrors.base_salary }"
+                        />
+                      </div>
+                      <p v-if="editErrors.base_salary" class="mt-1 text-sm text-red-600">{{ editErrors.base_salary }}</p>
+                    </div>
+
+                    <!-- 备注 -->
+                    <div class="sm:col-span-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+                      <textarea
+                        v-model="editForm.notes"
+                        rows="2"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                        placeholder="可选的备注信息..."
+                      ></textarea>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button
+              @click="updateEmployeeAction"
+              :disabled="updating"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div v-if="updating" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              {{ updating ? '更新中...' : '保存更改' }}
+            </button>
+            <button
+              @click="closeEditModal"
+              :disabled="updating"
               class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               取消
@@ -488,23 +648,29 @@ definePageMeta({
 
 const { 
   getEmployees, 
-  deleteEmployee: apiDeleteEmployee 
+  deleteEmployee: apiDeleteEmployee,
+  updateEmployee: apiUpdateEmployee
 } = useEmployeeApi()
 
 const { getDepartments } = useDepartmentApi()
 
-// 响应式数据
-const allEmployees = ref([]) // 将从API获取
-const totalServerEmployees = ref(0) // API返回的总员工数
-const departments = ref([]) // 部门列表
-const loading = ref(true)
-const deleting = ref(false)
-const searchQuery = ref('')
-const showDeleteModal = ref(false)
-const showAdvancedFilters = ref(false)
-const employeeToDelete = ref(null)
+// responsive data
+const allEmployees = ref([]) // fetch from API
+const totalServerEmployees = ref(0) // total number of employees returned from API
+const departments = ref([]) // departments list
+const loading = ref(true) // variable name for storing the state of the loading
+const deleting = ref(false) // variable name for storing the state of the deleting
+const searchQuery = ref('') // variable name for storing search input
+const showDeleteModal = ref(false) // variable name for storing the state of the delete modal
+const showAdvancedFilters = ref(false) // variable name for storing the state of the advanced filters
+const showEditModal = ref(false) // variable name for storing the state of the edit modal
+const employeeToDelete = ref(null) // variable name for storing the employee to delete
+const employeeToEdit = ref(null) // variable name for storing the employee to edit
+const editForm = ref({}) // form data for editing employee
+const editErrors = ref({}) // validation errors for edit form
+const updating = ref(false) // variable name for storing the state of the updating
 
-// 筛选条件
+// filters
 const filters = ref({
   department: '',
   position: '',
@@ -513,20 +679,20 @@ const filters = ref({
   salaryRange: ''
 })
 
-// 排序
+// sorting
 const sort = ref({
-  field: 'hire_date', // 默认按入职日期排序
-  direction: 'desc' // 默认降序
+  field: 'hire_date', // default sorting by hire date
+  direction: 'desc' // default sorting direction
 })
 
-// 分页
+// pagination
 const currentPage = ref(1)
 const pageSize = ref(10)
 
 const tableColumns = [
   { key: 'employee_id', label: '工号', sortable: true },
   { key: 'name', label: '姓名', sortable: true },
-  { key: 'gender', label: '性别', sortable: true },
+  { key: 'gender', label: '性别', sortable: true }, // M or F   
   { key: 'department', label: '部门', sortable: true },
   { key: 'position', label: '职称', sortable: true },
   { key: 'hire_date', label: '入职日期', sortable: true },
@@ -535,64 +701,64 @@ const tableColumns = [
   { key: 'base_salary', label: '薪资', sortable: true },
 ]
 
-// 获取和处理员工数据
+// fetch and process employee data
 const fetchEmployees = async () => {
   loading.value = true  
   try {
-    // 准备API参数 - 获取所有员工数据用于前端处理
+    // prepare API parameters - get all employee data for front-end processing
     const apiParams = {
       page: 1,
-      page_size: 1000, // 设置一个足够大的数字来获取所有员工
-      include_all_status: 'true', // 包含所有状态的员工
+      page_size: 1000, // set a large enough number to get all employees
+      include_all_status: 'true', // include all status employees
       ordering: (sort.value.direction === 'desc' ? '-' : '') + sort.value.field,
       search: searchQuery.value,
       department: filters.value.department,
       position: filters.value.position,
       gender: filters.value.gender,
       hire_year: filters.value.hireYear,
-      // salary_range: filters.value.salaryRange, // 薪资范围筛选可能需要在后端特别处理
+      // salary_range: filters.value.salaryRange, // salary range filtering may need special handling in backend
     };
-    // 移除空的筛选参数
+    // remove empty filter parameters
     for (const key in apiParams) {
       if (apiParams[key] === '' || apiParams[key] === null || apiParams[key] === undefined) {
         delete apiParams[key];
       }
     }
 
-    // Log API request parameters for debugging
+    // log API request parameters for debugging
     console.log('Fetching employees with params:', apiParams)
     
-    // Make API call to fetch employee data
+    // make API call to fetch employee data
     const response = await getEmployees(apiParams)
     console.log('API response:', response)
     
-    // Handle different response formats:
-    // 1. Standard paginated response (contains results and count)
+    // handle different response formats:
+    // 1. standard paginated response (contains results and count)
     if (response && response.results) {
       allEmployees.value = response.results
-      // Use response.count if available, otherwise fallback to results length
+      // use response.count if available, otherwise fallback to results length
       totalServerEmployees.value = response.count || response.results.length;
       console.log(`Loaded ${allEmployees.value.length} employees, total: ${totalServerEmployees.value}`)
     } 
-    // 2. Direct array response (non-paginated API)
+    // 2. direct array response (non-paginated API)
     else if (response && Array.isArray(response)) {
       allEmployees.value = response
       totalServerEmployees.value = response.length;
       console.log(`Loaded ${allEmployees.value.length} employees (direct array)`)
     } 
-    // 3. Invalid response format
+    // 3. invalid response format
     else {
       allEmployees.value = []
       totalServerEmployees.value = 0;
       console.error("Failed to fetch employees or invalid data structure", response);
     }
   } catch (error) {
-    // Handle any errors during API call
+    // handle any errors during API call
     console.error('Error fetching employees:', error)
     allEmployees.value = []
     totalServerEmployees.value = 0;
   } finally {
-    // Always reset loading state regardless of success/failure
+    // always reset
     loading.value = false
   }
 }
@@ -625,7 +791,7 @@ const filteredEmployees = computed(() => {
   }
 
   // Filter by hire year if specified
-  if (filters.value.hireYear) {4
+  if (filters.value.hireYear) {
     employees = employees.filter(emp => emp.hire_date && emp.hire_date.startsWith(filters.value.hireYear))
   }
 
@@ -707,9 +873,20 @@ const newEmployeesThisMonth = computed(() => {
 const averageSalary = computed(() => {
   // Return 0 if no employees
   if (!allEmployees.value.length) return 0
+  
+  // Filter employees with valid salary data
+  const employeesWithSalary = allEmployees.value.filter(emp => 
+    emp.base_salary && 
+    !isNaN(emp.base_salary) && 
+    emp.base_salary > 0
+  )
+  
+  // Return 0 if no employees have valid salary data
+  if (!employeesWithSalary.length) return 0
+  
   // Calculate total salary and return rounded average
-  const totalSalary = allEmployees.value.reduce((sum, emp) => sum + (emp.base_salary || 0), 0)
-  return Math.round(totalSalary / allEmployees.value.length)
+  const totalSalary = employeesWithSalary.reduce((sum, emp) => sum + Number(emp.base_salary), 0)
+  return Math.round(totalSalary / employeesWithSalary.length)
 })
 
 // 获取部门数据
@@ -871,6 +1048,107 @@ const deleteEmployeeAction = async () => {
     deleting.value = false;
   }
 };
+
+// Quick edit functions
+const openEditModal = (employee) => {
+  employeeToEdit.value = employee
+  editForm.value = {
+    name: employee.name,
+    employee_id: employee.employee_id,
+    gender: employee.gender,
+    phone: employee.phone,
+    birth_date: employee.birth_date,
+    hire_date: employee.hire_date,
+    department_ref: employee.department_ref,
+    position: employee.position,
+    status: employee.status,
+    location: employee.location,
+    base_salary: employee.base_salary,
+    notes: employee.notes || ''
+  }
+  editErrors.value = {}
+  showEditModal.value = true
+}
+
+const closeEditModal = () => {
+  showEditModal.value = false
+  employeeToEdit.value = null
+  editForm.value = {}
+  editErrors.value = {}
+}
+
+const validateEditForm = () => {
+  editErrors.value = {}
+  
+  // 姓名验证
+  if (!editForm.value.name?.trim()) {
+    editErrors.value.name = '请输入员工姓名'
+  } else if (editForm.value.name.trim().length < 2) {
+    editErrors.value.name = '姓名至少需要2个字符'
+  }
+  
+  // 工号验证
+  if (!editForm.value.employee_id?.trim()) {
+    editErrors.value.employee_id = '请输入员工工号'
+  } else if (!/^[A-Z0-9]+$/.test(editForm.value.employee_id.trim())) {
+    editErrors.value.employee_id = '工号只能包含大写字母和数字'
+  }
+  
+  // 性别验证
+  if (!editForm.value.gender) {
+    editErrors.value.gender = '请选择性别'
+  }
+  
+  // 电话验证
+  if (!editForm.value.phone?.trim()) {
+    editErrors.value.phone = '请输入电话号码'
+  } else if (!/^1[3-9]\d{9}$/.test(editForm.value.phone.trim())) {
+    editErrors.value.phone = '请输入有效的手机号码'
+  }
+  
+  // 基础工资验证
+  if (!editForm.value.base_salary || editForm.value.base_salary <= 0) {
+    editErrors.value.base_salary = '请输入有效的基础工资'
+  } else if (editForm.value.base_salary < 1000) {
+    editErrors.value.base_salary = '基础工资不能低于1000元'
+  } else if (editForm.value.base_salary > 100000) {
+    editErrors.value.base_salary = '基础工资不能超过100000元'
+  }
+  
+  return Object.keys(editErrors.value).length === 0
+}
+
+const updateEmployeeAction = async () => {
+  if (!validateEditForm()) return
+  
+  updating.value = true
+  try {
+    const response = await apiUpdateEmployee(employeeToEdit.value.id, editForm.value)
+    
+    if (response.success) {
+      fetchEmployees() // 重新获取数据
+      closeEditModal()
+      console.log('员工信息更新成功')
+    } else {
+      // 处理API返回的错误
+      if (response.errors) {
+        Object.keys(response.errors).forEach(field => {
+          if (editErrors.value.hasOwnProperty(field)) {
+            editErrors.value[field] = Array.isArray(response.errors[field]) 
+              ? response.errors[field][0] 
+              : response.errors[field]
+          }
+        })
+      } else {
+        console.error('更新员工失败:', response.error)
+      }
+    }
+  } catch (error) {
+    console.error('更新员工失败:', error)
+  } finally {
+    updating.value = false
+  }
+}
 
 const exportEmployees = () => {
   // 简单的CSV导出逻辑，可以按需扩展

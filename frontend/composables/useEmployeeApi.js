@@ -53,9 +53,16 @@ export const useEmployeeApi = () => {
           ...getAuthHeaders()
         }
       })
-      return response
+      // Django REST Framework 直接返回对象
+      if (response && response.id) {
+        return { success: true, data: response }
+      }
+      return { success: false, error: 'Employee not found' }
     } catch (error) {
       console.error(`Error fetching employee ${id}:`, error)
+      if (error.data) {
+        return { success: false, error: error.data.detail || error.message }
+      }
       return { success: false, error: error.message }
     }
   }
@@ -70,10 +77,18 @@ export const useEmployeeApi = () => {
         },
         body: employeeData
       })
-      return response
+      // Django REST Framework 直接返回创建的对象，不包装在success字段中
+      if (response && response.id) {
+        return { success: true, data: response }
+      }
+      return { success: false, error: 'Invalid response format' }
     } catch (error) {
       console.error('Error creating employee:', error)
-      return { success: false, error: error.message, errors: error.data?.errors || error.response?._data?.errors }
+      // 处理不同类型的错误响应
+      if (error.data) {
+        return { success: false, error: error.data.detail || error.message, errors: error.data }
+      }
+      return { success: false, error: error.message }
     }
   }
 
@@ -87,10 +102,17 @@ export const useEmployeeApi = () => {
         },
         body: employeeData
       })
-      return response
+      // Django REST Framework 直接返回更新的对象
+      if (response && response.id) {
+        return { success: true, data: response }
+      }
+      return { success: false, error: 'Invalid response format' }
     } catch (error) {
       console.error(`Error updating employee ${id}:`, error)
-      return { success: false, error: error.message, errors: error.data?.errors || error.response?._data?.errors }
+      if (error.data) {
+        return { success: false, error: error.data.detail || error.message, errors: error.data }
+      }
+      return { success: false, error: error.message }
     }
   }
 

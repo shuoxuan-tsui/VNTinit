@@ -9,9 +9,9 @@
       
       <!-- 计算薪资按钮 (仅管理员可见) -->
       <div class="mt-4 sm:mt-0">
-        <button
+        <NuxtLink
           v-if="isAdmin"
-          @click="showCalculateModal = true"
+          to="/salaries/generate"
           class="animated-button"
         >
           <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
@@ -22,7 +22,7 @@
           <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
             <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
           </svg>
-        </button>
+        </NuxtLink>
       </div>
     </div>
 
@@ -109,8 +109,8 @@
         <h3 class="mt-2 text-sm font-medium text-gray-900">暂无薪资记录</h3>
         <p class="mt-1 text-sm text-gray-500">还没有生成任何薪资记录</p>
         <div class="mt-6" v-if="isAdmin">
-          <button
-            @click="showCalculateModal = true"
+          <NuxtLink
+            to="/salaries/generate"
             class="animated-button"
           >
             <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
@@ -121,7 +121,7 @@
             <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
               <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
             </svg>
-          </button>
+          </NuxtLink>
         </div>
       </div>
 
@@ -421,6 +421,65 @@
         </div>
       </div>
     </div>
+
+    <!-- 详情模态框 -->
+    <div v-if="showDetailModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="showDetailModal = false">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+        <div class="inline-block bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">薪资详情</h3>
+            <pre class="whitespace-pre-wrap text-sm text-gray-700">{{ JSON.stringify(selectedRecord, null, 2) }}</pre>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button @click="showDetailModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">关闭</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 编辑模态框 -->
+    <div v-if="showEditModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="showEditModal = false">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+        <div class="inline-block bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-md sm:w-full">
+          <form @submit.prevent="submitEditSalary">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 space-y-4">
+              <h3 class="text-lg leading-6 font-medium text-gray-900">编辑薪资记录</h3>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">奖金</label>
+                <input v-model.number="editForm.bonus" type="number" step="0.01" min="0" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-accent focus:border-accent" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">扣除</label>
+                <input v-model.number="editForm.deduction" type="number" step="0.01" min="0" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-accent focus:border-accent" />
+              </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent text-base font-medium text-white hover:bg-accent-dark sm:ml-3 sm:w-auto sm:text-sm">保存</button>
+              <button type="button" @click="showEditModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">取消</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div v-if="confirmDeleteModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="confirmDeleteModal = false">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75"></div>
+        <div class="inline-block bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-sm sm:w-full">
+          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">确认删除</h3>
+            <p class="text-sm text-gray-700">确定要删除该薪资记录吗？此操作无法撤销。</p>
+          </div>
+          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+            <button @click="deleteSalaryRecord" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-danger text-base font-medium text-white hover:bg-red-700 sm:ml-3 sm:w-auto sm:text-sm">删除</button>
+            <button @click="confirmDeleteModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">取消</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -442,6 +501,10 @@ const loading = ref(false)
 const calculating = ref(false)
 const searchQuery = ref('')
 const showCalculateModal = ref(false)
+const showDetailModal = ref(false)
+const showEditModal = ref(false)
+const confirmDeleteModal = ref(false)
+const selectedRecord = ref(null)
 
 // 筛选条件
 const filters = ref({
@@ -468,6 +531,12 @@ const pagination = ref({
 const calculateForm = reactive({
   employeeId: '',
   salaryPeriod: '',
+  bonus: 0,
+  deduction: 0
+})
+
+// 编辑表单
+const editForm = reactive({
   bonus: 0,
   deduction: 0
 })
@@ -546,7 +615,21 @@ const loadSalaryRecords = async () => {
       search: searchQuery.value,
       department: filters.value.department,
       salary_period: filters.value.salaryPeriod,
-      salary_range: filters.value.salaryRange,
+    }
+    // 薪资范围转为 min / max
+    if (filters.value.salaryRange) {
+      const range = filters.value.salaryRange
+      if (range.includes('-')) {
+        const [min, max] = range.split('-')
+        if (min) apiParams.min_salary = min
+        if (max) apiParams.max_salary = max
+      } else if (range.endsWith('+')) {
+        apiParams.min_salary = range.replace('+', '')
+      }
+    }
+    // 排序
+    if (sort.value.field) {
+      apiParams.ordering = sort.value.direction === 'asc' ? sort.value.field : `-${sort.value.field}`
     }
     
     // 移除空的筛选参数
@@ -636,20 +719,58 @@ const changePage = (page) => {
 }
 
 const viewSalaryDetail = (record) => {
-  console.log('查看薪资详情:', record)
+  selectedRecord.value = record
+  showDetailModal.value = true
 }
 
 const printSalary = (record) => {
-  console.log('打印薪资单:', record)
-  // 后续实现打印功能
+  // 简单打印实现：新窗口渲染 JSON，可根据需要替换模板。
+  const printWindow = window.open('', '_blank')
+  printWindow.document.write(`<pre>${JSON.stringify(record, null, 2)}</pre>`)  
+  printWindow.document.close()
+  printWindow.focus()
+  printWindow.print()
+  printWindow.close()
 }
 
 const editSalaryRecord = (record) => {
-  console.log('编辑薪资记录:', record)
+  selectedRecord.value = record
+  editForm.bonus = Number(record.bonus || 0)
+  editForm.deduction = Number(record.deduction || 0)
+  showEditModal.value = true
+}
+
+const submitEditSalary = async () => {
+  try {
+    const payload = {
+      bonus: editForm.bonus,
+      deductions: editForm.deduction
+    }
+    const res = await salaryApi.updateSalary(selectedRecord.value.id, payload)
+    if (res && res.success !== false) {
+      await loadSalaryRecords()
+      showEditModal.value = false
+    }
+  } catch (err) {
+    console.error('更新薪资记录失败:', err)
+  }
 }
 
 const confirmDeleteSalary = (record) => {
-  console.log('删除薪资记录:', record)
+  selectedRecord.value = record
+  confirmDeleteModal.value = true
+}
+
+const deleteSalaryRecord = async () => {
+  try {
+    const res = await salaryApi.deleteSalary(selectedRecord.value.id)
+    if (res && res.success !== false) {
+      await loadSalaryRecords()
+      confirmDeleteModal.value = false
+    }
+  } catch (err) {
+    console.error('删除薪资记录失败:', err)
+  }
 }
 
 const closeCalculateModal = () => {

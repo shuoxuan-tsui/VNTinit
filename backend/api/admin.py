@@ -9,16 +9,16 @@ from .models import Employee, SalaryRecord
 class EmployeeAdmin(admin.ModelAdmin):
     # 定义在管理后台中显示的字段
     list_display = ['employee_id', 'name', 'gender', 'department', 'position', 'base_salary', 'hire_date', 'created_at']
-    # 定义在管理后台中可以过滤的字段
+    # 可过滤的字段
     list_filter = ['gender', 'department', 'position', 'hire_date']
-    # 定义在管理后台中可以搜索的字段
+    # 可搜索的字段
     search_fields = ['employee_id', 'name', 'department', 'position']
-    # 定义在管理后台中可以排序的字段
+    # 可排序的字段
     ordering = ['-created_at']
-    # 定义在管理后台中可以编辑的字段
+    # 可只读的字段
     readonly_fields = ['id', 'created_at', 'updated_at']
-    
-    # 定义在管理后台中可以编辑的字段
+
+    # 可编辑的字段
     fieldsets = (
         ('基本信息', {
             'fields': ('employee_id', 'name', 'gender', 'phone')

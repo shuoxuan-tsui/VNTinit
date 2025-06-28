@@ -382,3 +382,194 @@ class AttendanceRecord(models.Model):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
         }
+
+# # RAG and AI models @start
+# class KnowledgeDocument(models.Model):
+#     """技术文档知识库模型"""
+#     DOCUMENT_TYPES = [
+#         ('technical', '技术文档'),
+#         ('policy', '公司政策'),
+#         ('procedure', '操作流程'),
+#         ('faq', '常见问题'),
+#         ('manual', '操作手册'),
+#         ('training', '培训材料'),
+#     ]
+    
+#     STATUS_CHOICES = [
+#         ('processing', '处理中'),
+#         ('indexed', '已索引'),
+#         ('failed', '处理失败'),
+#     ]
+    
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     title = models.CharField(max_length=200, verbose_name='文档标题')
+#     description = models.TextField(blank=True, verbose_name='文档描述')
+#     document_type = models.CharField(
+#         max_length=20, 
+#         choices=DOCUMENT_TYPES, 
+#         default='technical',
+#         verbose_name='文档类型'
+#     )
+#     file_path = models.CharField(max_length=500, verbose_name='文件路径')
+#     file_name = models.CharField(max_length=200, verbose_name='原始文件名')
+#     file_size = models.BigIntegerField(verbose_name='文件大小(字节)')
+#     content = models.TextField(verbose_name='文档内容')
+    
+#     # 向量化相关字段
+#     status = models.CharField(
+#         max_length=20, 
+#         choices=STATUS_CHOICES, 
+#         default='processing',
+#         verbose_name='处理状态'
+#     )
+#     chunk_count = models.IntegerField(default=0, verbose_name='分块数量')
+    
+#     # 元数据
+#     department = models.ForeignKey(
+#         Department, 
+#         on_delete=models.SET_NULL, 
+#         null=True, 
+#         blank=True,
+#         verbose_name='关联部门'
+#     )
+#     tags = models.CharField(max_length=500, blank=True, verbose_name='标签(逗号分隔)')
+#     uploaded_by = models.ForeignKey(
+#         User, 
+#         on_delete=models.SET_NULL, 
+#         null=True,
+#         verbose_name='上传者'
+#     )
+    
+#     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+#     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+    
+#     class Meta:
+#         verbose_name = '知识文档'
+#         verbose_name_plural = '知识文档'
+#         ordering = ['-created_at']
+#         indexes = [
+#             models.Index(fields=['document_type']),
+#             models.Index(fields=['status']),
+#             models.Index(fields=['department']),
+#             models.Index(fields=['created_at']),
+#         ]
+    
+#     def __str__(self):
+#         return self.title
+    
+#     def to_dict(self):
+#         """转换为字典格式，用于API响应"""
+#         return {
+#             'id': str(self.id),
+#             'title': self.title,
+#             'description': self.description,
+#             'document_type': self.document_type,
+#             'file_name': self.file_name,
+#             'file_size': self.file_size,
+#             'status': self.status,
+#             'chunk_count': self.chunk_count,
+#             'department': self.department.name if self.department else None,
+#             'tags': self.tags.split(',') if self.tags else [],
+#             'uploaded_by': self.uploaded_by.username if self.uploaded_by else None,
+#             'created_at': self.created_at.isoformat(),
+#             'updated_at': self.updated_at.isoformat(),
+#         }
+
+
+# class ChatSession(models.Model):
+#     """聊天会话模型"""
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='用户')
+#     title = models.CharField(max_length=200, default='新会话', verbose_name='会话标题')
+#     is_active = models.BooleanField(default=True, verbose_name='是否活跃')
+#     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+#     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+    
+#     class Meta:
+#         verbose_name = '聊天会话'
+#         verbose_name_plural = '聊天会话'
+#         ordering = ['-updated_at']
+#         indexes = [
+#             models.Index(fields=['user', '-updated_at']),
+#         ]
+    
+#     def __str__(self):
+#         return f"{self.user.username} - {self.title}"
+    
+#     @property
+#     def message_count(self):
+#         """获取消息数量"""
+#         return self.messages.count()
+    
+#     def to_dict(self):
+#         """转换为字典格式，用于API响应"""
+#         return {
+#             'id': str(self.id),
+#             'title': self.title,
+#             'is_active': self.is_active,
+#             'message_count': self.message_count,
+#             'created_at': self.created_at.isoformat(),
+#             'updated_at': self.updated_at.isoformat(),
+#         }
+
+
+# class ChatMessage(models.Model):
+#     """聊天消息模型"""
+#     ROLE_CHOICES = [
+#         ('user', '用户'),
+#         ('assistant', '助手'),
+#         ('system', '系统'),
+#     ]
+    
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     session = models.ForeignKey(
+#         ChatSession, 
+#         on_delete=models.CASCADE, 
+#         related_name='messages',
+#         verbose_name='会话'
+#     )
+#     role = models.CharField(
+#         max_length=20, 
+#         choices=ROLE_CHOICES, 
+#         verbose_name='角色'
+#     )
+#     content = models.TextField(verbose_name='消息内容')
+    
+#     # 元数据：存储引用的文档、置信度等信息
+#     metadata = models.JSONField(
+#         null=True, 
+#         blank=True, 
+#         verbose_name='元数据',
+#         help_text='存储引用文档、置信度等信息'
+#     )
+    
+#     # 性能指标
+#     response_time = models.FloatField(null=True, blank=True, verbose_name='响应时间(秒)')
+#     token_count = models.IntegerField(null=True, blank=True, verbose_name='Token数量')
+    
+#     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    
+#     class Meta:
+#         verbose_name = '聊天消息'
+#         verbose_name_plural = '聊天消息'
+#         ordering = ['created_at']
+#         indexes = [
+#             models.Index(fields=['session', 'created_at']),
+#             models.Index(fields=['role']),
+#         ]
+    
+#     def __str__(self):
+#         return f"{self.session.title} - {self.role}: {self.content[:50]}..."
+    
+#     def to_dict(self):
+#         """转换为字典格式，用于API响应"""
+#         return {
+#             'id': str(self.id),
+#             'role': self.role,
+#             'content': self.content,
+#             'metadata': self.metadata,
+#             'response_time': self.response_time,
+#             'token_count': self.token_count,
+#             'created_at': self.created_at.isoformat(),
+#         }
+# # RAG and AI models @end

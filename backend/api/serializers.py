@@ -1,9 +1,12 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Department, Employee, SalaryRecord
+# , KnowledgeDocument, ChatSession, ChatMessage
 from decimal import Decimal
 import re
+import os
 from datetime import datetime
+from django.conf import settings
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -268,6 +271,12 @@ class UserSerializer(serializers.ModelSerializer):
         email: The user's email address
         is_superuser: Boolean indicating admin status (read-only)
         groups: List of group names the user belongs to (read-only)
+
+        This model = User, User is built-in user model in django with basic fragment such as: username, password, is_active, is staff, is superuser, etc.
+        In frontend, we use this fragment to signed a user is active or not.
+        despite raise a error.
+
+        serializer.stringrelatedfield is a read-only field that represents its targets using their plain string representation.
     """
     groups = serializers.StringRelatedField(many=True, read_only=True)
     
@@ -275,3 +284,139 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'is_superuser', 'groups']
         read_only_fields = ['id', 'is_superuser', 'groups']  # These fields cannot be modified via API
+
+
+# class KnowledgeDocumentSerializer(serializers.ModelSerializer):
+#     """知识文档序列化器"""
+#     department_name = serializers.CharField(source='department.name', read_only=True)
+#     uploaded_by_name = serializers.CharField(source='uploaded_by.username', read_only=True)
+#     tags_list = serializers.SerializerMethodField()
+    
+#     class Meta:
+#         model = KnowledgeDocument
+#         fields = [
+#             'id', 'title', 'description', 'document_type', 'file_name', 'file_size',
+#             'content', 'status', 'chunk_count', 'department', 'department_name',
+#             'tags', 'tags_list', 'uploaded_by', 'uploaded_by_name',
+#             'created_at', 'updated_at'
+#         ]
+#         read_only_fields = [
+#             'id', 'file_size', 'content', 'status', 'chunk_count',
+#             'department_name', 'uploaded_by_name', 'created_at', 'updated_at'
+#         ]
+    
+#     def get_tags_list(self, obj):
+#         """获取标签列表"""
+#         if obj.tags:
+#             return [tag.strip() for tag in obj.tags.split(',') if tag.strip()]
+#         return []
+    
+#     def validate_title(self, value):
+#         """验证标题"""
+#         if len(value.strip()) < 2:
+#             raise serializers.ValidationError("标题至少需要2个字符")
+#         return value.strip()
+    
+#     def validate_tags(self, value):
+#         """验证标签"""
+#         if value:
+#             tags = [tag.strip() for tag in value.split(',')]
+#             if len(tags) > 10:
+#                 raise serializers.ValidationError("标签数量不能超过10个")
+#             for tag in tags:
+#                 if len(tag) > 20:
+#                     raise serializers.ValidationError("单个标签长度不能超过20个字符")
+#         return value
+
+
+# class DocumentUploadSerializer(serializers.Serializer):
+#     """文档上传序列化器"""
+#     file = serializers.FileField()
+#     title = serializers.CharField(max_length=200)
+#     description = serializers.CharField(required=False, allow_blank=True)
+#     document_type = serializers.ChoiceField(choices=KnowledgeDocument.DOCUMENT_TYPES)
+#     department = serializers.UUIDField(required=False, allow_null=True)
+#     tags = serializers.CharField(required=False, allow_blank=True)
+    
+#     def validate_file(self, value):
+#         """验证上传文件"""
+#         # 文件大小检查
+#         if value.size > settings.MAX_DOCUMENT_SIZE:
+#             raise serializers.ValidationError(
+#                 f"文件大小超过限制 ({settings.MAX_DOCUMENT_SIZE // (1024*1024)}MB)"
+#             )
+        
+#         # 文件类型检查
+#         file_ext = os.path.splitext(value.name)[1].lower()
+#         if file_ext not in settings.ALLOWED_DOCUMENT_TYPES:
+#             raise serializers.ValidationError(f"不支持的文件类型: {file_ext}")
+        
+#         return value
+
+
+# class ChatSessionSerializer(serializers.ModelSerializer):
+#     """聊天会话序列化器"""
+#     message_count = serializers.ReadOnlyField()
+#     last_message = serializers.SerializerMethodField()
+    
+#     class Meta:
+#         model = ChatSession
+#         fields = [
+#             'id', 'title', 'is_active', 'message_count', 'last_message',
+#             'created_at', 'updated_at'
+#         ]
+#         read_only_fields = ['id', 'message_count', 'created_at', 'updated_at']
+    
+#     def get_last_message(self, obj):
+#         """获取最后一条消息"""
+#         last_msg = obj.messages.last()
+#         if last_msg:
+#             return {
+#                 'content': last_msg.content[:100] + '...' if len(last_msg.content) > 100 else last_msg.content,
+#                 'role': last_msg.role,
+#                 'created_at': last_msg.created_at
+#             }
+#         return None
+
+
+# class ChatMessageSerializer(serializers.ModelSerializer):
+#     """聊天消息序列化器"""
+    
+#     class Meta:
+#         model = ChatMessage
+#         fields = [
+#             'id', 'role', 'content', 'metadata', 'response_time',
+#             'token_count', 'created_at'
+#         ]
+#         read_only_fields = ['id', 'response_time', 'token_count', 'created_at']
+
+
+# class ChatRequestSerializer(serializers.Serializer):
+#     """聊天请求序列化器"""
+#     message = serializers.CharField(max_length=2000)
+#     session_id = serializers.UUIDField(required=False, allow_null=True)
+#     model = serializers.CharField(default="gpt-3.5-turbo", required=False)
+    
+#     def validate_message(self, value):
+#         """验证消息内容"""
+#         if len(value.strip()) < 1:
+#             raise serializers.ValidationError("消息内容不能为空")
+#         return value.strip()
+
+
+# class DocumentSearchSerializer(serializers.Serializer):
+#     """文档搜索序列化器"""
+#     query = serializers.CharField(max_length=500)
+#     document_type = serializers.ChoiceField(
+#         choices=KnowledgeDocument.DOCUMENT_TYPES,
+#         required=False,
+#         allow_null=True
+#     )
+#     department = serializers.UUIDField(required=False, allow_null=True)
+#     top_k = serializers.IntegerField(default=5, min_value=1, max_value=20)
+    
+#     def validate_query(self, value):
+#         """验证查询内容"""
+#         if len(value.strip()) < 2:
+#             raise serializers.ValidationError("查询内容至少需要2个字符")
+#         return value.strip()

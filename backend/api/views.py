@@ -13,14 +13,23 @@ from decimal import Decimal
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import render_to_string
 import json
+import time
 from datetime import datetime
+import re
 
 from .models import Department, Employee, SalaryRecord, AttendanceRecord
+# KnowledgeDocument, ChatSession, ChatMessage
 from .serializers import (
     DepartmentSerializer, EmployeeSerializer, SalaryRecordSerializer, 
     SalaryCalculationSerializer, UserSerializer
+    # KnowledgeDocumentSerializer,
+    # DocumentUploadSerializer, ChatSessionSerializer, ChatMessageSerializer,
+    # ChatRequestSerializer, DocumentSearchSerializer
 )
 from .permissions import IsAdminOrReadOnly, IsAdminUser, IsSalaryOwnerOrAdmin
+# from .services.vector_service import VectorService
+# from .services.document_service import DocumentProcessor
+# from .services.llm_service import LLMService
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -286,9 +295,17 @@ def calculate_salary_view(request):
         'errors': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
 
-
+"""
+@api_view装饰器是DRF框架的核心装饰器
+将普通函数转换为DRF API视图
+明确指定视图函数接受的HTTP请求方法（如GET/POST）
+将Django的HttpRequest转换为DRF的Request对象
+"""
 @api_view(['GET'])
-@permission_classes([IsSalaryOwnerOrAdmin])
+# 这是一个DRF权限装饰器，用于限制视图访问权限。
+# IsSalaryOwnerOrAdmin是一个自定义权限类
+# 它检查请求用户是否是薪资记录的所有者或者是管理员
+@permission_classes([IsSalaryOwnerOrAdmin])  
 def salary_print_view(request, record_id):
     """薪资记录打印视图"""
     try:
@@ -766,3 +783,551 @@ def salary_export_view(request):
             'success': False,
             'error': f'导出薪资数据失败: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# RAG and AI views @start
+# RAG相关视图
+
+# class KnowledgeDocumentListCreateView(generics.ListCreateAPIView):
+#     """知识文档列表和创建视图"""
+#     serializer_class = KnowledgeDocumentSerializer
+#     permission_classes = [IsAdminOrReadOnly]
+    
+#     def get_queryset(self):
+#         queryset = KnowledgeDocument.objects.all()
+        
+#         # 搜索功能
+#         search = self.request.query_params.get('search', None)
+#         if search:
+#             queryset = queryset.filter(
+#                 Q(title__icontains=search) |
+#                 Q(description__icontains=search) |
+#                 Q(tags__icontains=search)
+#             )
+        
+#         # 筛选功能
+#         document_type = self.request.query_params.get('document_type', None)
+#         if document_type:
+#             queryset = queryset.filter(document_type=document_type)
+        
+#         department = self.request.query_params.get('department', None)
+#         if department:
+#             queryset = queryset.filter(department=department)
+        
+#         status = self.request.query_params.get('status', None)
+#         if status:
+#             queryset = queryset.filter(status=status)
+        
+#         # 排序功能
+#         ordering = self.request.query_params.get('ordering', '-created_at')
+#         if ordering:
+#             queryset = queryset.order_by(ordering)
+        
+#         return queryset
+    
+#     def list(self, request, *args, **kwargs):
+#         queryset = self.get_queryset()
+        
+#         # 分页
+#         page = request.query_params.get('page', 1)
+#         page_size = request.query_params.get('page_size', 20)
+        
+#         try:
+#             page = int(page)
+#             page_size = int(page_size)
+#         except ValueError:
+#             page = 1
+#             page_size = 20
+        
+#         paginator = Paginator(queryset, page_size)
+#         page_obj = paginator.get_page(page)
+        
+#         serializer = self.get_serializer(page_obj, many=True)
+        
+#         return Response({
+#             'results': serializer.data,
+#             'total_pages': paginator.num_pages,
+#             'current_page': page,
+#             'total_count': paginator.count
+#         })
+
+
+# class KnowledgeDocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     """知识文档详情、更新和删除视图"""
+#     queryset = KnowledgeDocument.objects.all()
+#     serializer_class = KnowledgeDocumentSerializer
+#     permission_classes = [IsAdminOrReadOnly]
+    
+#     def destroy(self, request, *args, **kwargs):
+#         """删除文档时同时删除向量数据和文件"""
+#         document = self.get_object()
+        
+#         try:
+#             # 删除向量数据
+#             vector_service = VectorService()
+#             vector_service.delete_document(str(document.id))
+            
+#             # 删除文件
+#             document_processor = DocumentProcessor()
+#             if document.file_path:
+#                 document_processor.delete_file(document.file_path)
+            
+#             # 删除数据库记录
+#             return super().destroy(request, *args, **kwargs)
+            
+#         except Exception as e:
+#             return Response(
+#                 {'error': f'删除文档失败: {str(e)}'}, 
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
+
+
+# @api_view(['POST'])
+# @permission_classes([IsAdminUser])
+# def upload_document_view(request):
+#     """文档上传视图"""
+#     serializer = DocumentUploadSerializer(data=request.data)
+    
+#     if not serializer.is_valid():
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+#     try:
+#         # 初始化服务
+#         document_processor = DocumentProcessor()
+#         vector_service = VectorService()
+        
+#         # 验证文件
+#         uploaded_file = serializer.validated_data['file']
+#         is_valid, error_msg = document_processor.validate_file(uploaded_file)
+#         if not is_valid:
+#             return Response({'error': error_msg}, status=status.HTTP_400_BAD_REQUEST)
+        
+#         # 创建文档记录
+#         document = KnowledgeDocument.objects.create(
+#             title=serializer.validated_data['title'],
+#             description=serializer.validated_data.get('description', ''),
+#             document_type=serializer.validated_data['document_type'],
+#             department_id=serializer.validated_data.get('department'),
+#             tags=serializer.validated_data.get('tags', ''),
+#             file_name=uploaded_file.name,
+#             file_size=uploaded_file.size,
+#             uploaded_by=request.user,
+#             content='',  # 将在后台处理中填充
+#             status='processing'
+#         )
+        
+#         # 保存文件
+#         file_path = document_processor.save_uploaded_file(uploaded_file, str(document.id))
+#         document.file_path = file_path
+#         document.save()
+        
+#         # 后台处理文档（提取文本、分块、向量化）
+#         try:
+#             # 提取文本
+#             content = document_processor.extract_text_from_file(file_path)
+#             document.content = content
+            
+#             # 分块
+#             metadata = {
+#                 'title': document.title,
+#                 'document_type': document.document_type,
+#                 'department': document.department.name if document.department else None,
+#                 'uploaded_by': document.uploaded_by.username,
+#                 'file_name': document.file_name
+#             }
+            
+#             chunks = document_processor.split_text_into_chunks(content, metadata)
+            
+#             # 向量化并存储
+#             chunk_texts = [chunk['text'] for chunk in chunks]
+#             success = vector_service.add_document_chunks(str(document.id), chunk_texts, metadata)
+            
+#             if success:
+#                 document.status = 'indexed'
+#                 document.chunk_count = len(chunks)
+#             else:
+#                 document.status = 'failed'
+            
+#             document.save()
+            
+#         except Exception as e:
+#             document.status = 'failed'
+#             document.save()
+#             return Response(
+#                 {'error': f'文档处理失败: {str(e)}'}, 
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
+        
+#         # 返回结果
+#         response_serializer = KnowledgeDocumentSerializer(document)
+#         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        
+#     except Exception as e:
+#         return Response(
+#             {'error': f'文档上传失败: {str(e)}'}, 
+#             status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#         )
+
+
+# @api_view(['POST'])
+# @permission_classes([permissions.IsAuthenticated])
+# def search_documents_view(request):
+#     """文档搜索视图"""
+#     serializer = DocumentSearchSerializer(data=request.data)
+    
+#     if not serializer.is_valid():
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+#     try:
+#         query = serializer.validated_data['query']
+#         top_k = serializer.validated_data['top_k']
+#         document_type = serializer.validated_data.get('document_type')
+#         department = serializer.validated_data.get('department')
+        
+#         # 构建过滤条件
+#         filters = {}
+#         if document_type:
+#             filters['document_type'] = document_type
+#         if department:
+#             filters['department'] = str(department)
+        
+#         # 向量搜索
+#         vector_service = VectorService()
+#         search_results = vector_service.search_similar_documents(
+#             query=query,
+#             top_k=top_k,
+#             filters=filters if filters else None
+#         )
+        
+#         # 格式化结果
+#         results = []
+#         for i, (doc_text, metadata, distance) in enumerate(zip(
+#             search_results['documents'],
+#             search_results['metadatas'],
+#             search_results['distances']
+#         )):
+#             results.append({
+#                 'rank': i + 1,
+#                 'content': doc_text[:500] + '...' if len(doc_text) > 500 else doc_text,
+#                 'metadata': metadata,
+#                 'similarity_score': 1 - distance,  # 转换为相似度分数
+#                 'document_id': metadata.get('document_id'),
+#                 'title': metadata.get('title'),
+#                 'document_type': metadata.get('document_type')
+#             })
+        
+#         return Response({
+#             'query': query,
+#             'total_results': len(results),
+#             'results': results
+#         })
+        
+#     except Exception as e:
+#         return Response(
+#             {'error': f'搜索失败: {str(e)}'}, 
+#             status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#         )
+
+
+# class ChatSessionListCreateView(generics.ListCreateAPIView):
+#     """聊天会话列表和创建视图"""
+#     serializer_class = ChatSessionSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+    
+#     def get_queryset(self):
+#         return ChatSession.objects.filter(user=self.request.user).order_by('-updated_at')
+    
+#     def perform_create(self, serializer):
+#         serializer.save(user=self.request.user)
+
+
+# class ChatSessionDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     """聊天会话详情、更新和删除视图"""
+#     serializer_class = ChatSessionSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+    
+#     def get_queryset(self):
+#         return ChatSession.objects.filter(user=self.request.user)
+
+
+# @api_view(['GET'])
+# @permission_classes([permissions.IsAuthenticated])
+# def chat_session_messages_view(request, session_id):
+#     """获取会话消息列表"""
+#     try:
+#         session = ChatSession.objects.get(id=session_id, user=request.user)
+#         messages = session.messages.all().order_by('created_at')
+#         serializer = ChatMessageSerializer(messages, many=True)
+        
+#         return Response({
+#             'session_id': str(session.id),
+#             'session_title': session.title,
+#             'messages': serializer.data
+#         })
+        
+#     except ChatSession.DoesNotExist:
+#         return Response(
+#             {'error': '会话不存在'}, 
+#             status=status.HTTP_404_NOT_FOUND
+#         )
+
+
+# @api_view(['POST'])
+# @permission_classes([permissions.IsAuthenticated])
+# def chat_view(request):
+#     """RAG聊天视图"""
+#     serializer = ChatRequestSerializer(data=request.data)
+    
+#     if not serializer.is_valid():
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+#     try:
+#         message = serializer.validated_data['message']
+#         session_id = serializer.validated_data.get('session_id')
+#         model = serializer.validated_data.get('model', 'gpt-3.5-turbo')
+        
+#         # 获取或创建会话
+#         if session_id:
+#             try:
+#                 session = ChatSession.objects.get(id=session_id, user=request.user)
+#             except ChatSession.DoesNotExist:
+#                 return Response(
+#                     {'error': '会话不存在'}, 
+#                     status=status.HTTP_404_NOT_FOUND
+#                 )
+#         else:
+#             # 创建新会话
+#             llm_service = LLMService()
+#             title = llm_service.generate_title_for_session(message)
+#             session = ChatSession.objects.create(
+#                 user=request.user,
+#                 title=title
+#             )
+        
+#         # 保存用户消息
+#         user_message = ChatMessage.objects.create(
+#             session=session,
+#             role='user',
+#             content=message
+#         )
+        
+#         # 初始化服务
+#         vector_service = VectorService()
+#         llm_service = LLMService()
+        
+#         start_time = time.time()
+        
+#         # 检索相关文档
+#         search_results = vector_service.search_similar_documents(query=message)
+        
+#         # 格式化上下文
+#         context = llm_service.format_context_from_documents(search_results)
+        
+#         # 获取对话历史
+#         conversation_history = []
+#         recent_messages = session.messages.filter(
+#             created_at__lt=user_message.created_at
+#         ).order_by('-created_at')[:6]
+        
+#         for msg in reversed(recent_messages):
+#             conversation_history.append({
+#                 'role': msg.role,
+#                 'content': msg.content
+#             })
+        
+#         # 生成回答
+#         llm_response = llm_service.generate_response(
+#             query=message,
+#             context=context,
+#             conversation_history=conversation_history,
+#             model=model
+#         )
+        
+#         # 准备元数据
+#         metadata = {
+#             'search_results_count': len(search_results['documents']),
+#             'context_length': len(context),
+#             'model': model,
+#             'referenced_documents': []
+#         }
+        
+#         # 添加引用文档信息
+#         for metadata_item in search_results['metadatas']:
+#             if metadata_item:
+#                 metadata['referenced_documents'].append({
+#                     'title': metadata_item.get('title'),
+#                     'document_type': metadata_item.get('document_type'),
+#                     'document_id': metadata_item.get('document_id')
+#                 })
+        
+#         # 保存助手回复
+#         assistant_message = ChatMessage.objects.create(
+#             session=session,
+#             role='assistant',
+#             content=llm_response['response'],
+#             metadata=metadata,
+#             response_time=llm_response.get('response_time'),
+#             token_count=llm_response.get('token_count')
+#         )
+        
+#         # 更新会话时间
+#         session.save()
+        
+#         # 返回响应
+#         return Response({
+#             'session_id': str(session.id),
+#             'session_title': session.title,
+#             'message_id': str(assistant_message.id),
+#             'response': llm_response['response'],
+#             'metadata': metadata,
+#             'response_time': llm_response.get('response_time'),
+#             'success': llm_response.get('success', True)
+#         })
+        
+#     except Exception as e:
+#         return Response(
+#             {'error': f'聊天处理失败: {str(e)}'}, 
+#             status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#         )
+
+
+# @api_view(['GET'])
+# @permission_classes([IsAdminUser])
+# def rag_system_stats_view(request):
+#     """RAG系统统计信息视图"""
+#     try:
+#         # 文档统计
+#         total_documents = KnowledgeDocument.objects.count()
+#         indexed_documents = KnowledgeDocument.objects.filter(status='indexed').count()
+#         processing_documents = KnowledgeDocument.objects.filter(status='processing').count()
+#         failed_documents = KnowledgeDocument.objects.filter(status='failed').count()
+        
+#         # 会话统计
+#         total_sessions = ChatSession.objects.count()
+#         active_sessions = ChatSession.objects.filter(is_active=True).count()
+#         total_messages = ChatMessage.objects.count()
+        
+#         # 向量数据库统计
+#         vector_service = VectorService()
+#         vector_stats = vector_service.get_collection_stats()
+        
+#         # LLM服务健康检查
+#         llm_service = LLMService()
+#         llm_health = llm_service.check_service_health()
+        
+#         return Response({
+#             'documents': {
+#                 'total': total_documents,
+#                 'indexed': indexed_documents,
+#                 'processing': processing_documents,
+#                 'failed': failed_documents
+#             },
+#             'conversations': {
+#                 'total_sessions': total_sessions,
+#                 'active_sessions': active_sessions,
+#                 'total_messages': total_messages
+#             },
+#             'vector_database': vector_stats,
+#             'llm_service': llm_health,
+#             'system_status': 'healthy' if llm_health.get('service_available') else 'degraded'
+#         })
+        
+#     except Exception as e:
+#         return Response(
+#             {'error': f'获取统计信息失败: {str(e)}'}, 
+#             status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#         )
+# RAG and AI views @end
+
+# ==== 新增：薪资计算/批量生成接口（与前端保持一致） ====
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def calculate_salary_by_employee_view(request, employee_id):
+    """根据员工 UUID 计算并创建单条薪资记录（前端 /api/salaries/calculate/<employee_id>/）"""
+    # 解析请求数据
+    salary_period = request.data.get('salary_period')
+    bonus = Decimal(str(request.data.get('bonus', 0)))
+    deduction = Decimal(str(request.data.get('deduction', request.data.get('deductions', 0))))
+
+    # 基本校验
+    if not salary_period or not re.match(r'^\d{4}-\d{2}$', str(salary_period)):
+        return Response({'success': False, 'error': '薪资期间格式应为 YYYY-MM'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        employee = Employee.objects.get(id=employee_id)
+    except Employee.DoesNotExist:
+        return Response({'success': False, 'error': '员工不存在'}, status=status.HTTP_404_NOT_FOUND)
+
+    # 检查重复
+    if SalaryRecord.objects.filter(employee=employee, salary_period=salary_period).exists():
+        return Response({'success': False, 'error': '该员工在此期间已有薪资记录'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 计算薪资
+    base_salary = employee.base_salary
+    gross_salary = base_salary + bonus
+    net_salary = gross_salary - deduction
+
+    salary_record = SalaryRecord.objects.create(
+        employee=employee,
+        salary_period=salary_period,
+        position_snapshot=employee.position,
+        base_salary_snapshot=base_salary,
+        bonus=bonus,
+        deductions=deduction,
+        gross_salary=gross_salary,
+        net_salary=net_salary
+    )
+
+    return Response({
+        'success': True,
+        'message': '薪资计算完成',
+        'data': SalaryRecordSerializer(salary_record).data
+    }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def generate_salaries_view(request):
+    """为所有员工批量生成薪资记录（前端 /api/salaries/generate/）"""
+    salary_period = request.data.get('salary_period')
+    bonus = Decimal(str(request.data.get('bonus', 0)))
+    deduction = Decimal(str(request.data.get('deduction', request.data.get('deductions', 0))))
+
+    # 校验
+    if not salary_period or not re.match(r'^\d{4}-\d{2}$', str(salary_period)):
+        return Response({'success': False, 'error': '薪资期间格式应为 YYYY-MM'}, status=status.HTTP_400_BAD_REQUEST)
+
+    created_records = []
+    skipped_employees = []
+
+    for employee in Employee.objects.all():
+        # 跳过已存在记录
+        if SalaryRecord.objects.filter(employee=employee, salary_period=salary_period).exists():
+            skipped_employees.append(employee.employee_id)
+            continue
+
+        base_salary = employee.base_salary
+        gross_salary = base_salary + bonus
+        net_salary = gross_salary - deduction
+
+        record = SalaryRecord.objects.create(
+            employee=employee,
+            salary_period=salary_period,
+            position_snapshot=employee.position,
+            base_salary_snapshot=base_salary,
+            bonus=bonus,
+            deductions=deduction,
+            gross_salary=gross_salary,
+            net_salary=net_salary
+        )
+        created_records.append(record)
+
+    return Response({
+        'success': True,
+        'message': f'批量生成完成，成功 {len(created_records)} 条，跳过 {len(skipped_employees)} 条',
+        'data': {
+            'created': SalaryRecordSerializer(created_records, many=True).data,
+            'skipped_employee_ids': skipped_employees
+        }
+    }, status=status.HTTP_201_CREATED)
+
+# ==== 结束新增 ====

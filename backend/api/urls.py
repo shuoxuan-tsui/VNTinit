@@ -77,5 +77,21 @@ urlpatterns = [
     path('salaries/<uuid:record_id>/print_view/', views.salary_print_view, name='salary_print'),
     path('salaries/stats/', views.salary_stats_view, name='salary_stats'),
     path('salaries/export/', views.salary_export_view, name='salary_export'),
+    path('salaries/generate/', views.generate_salaries_view, name='generate_salaries'),
+    path('salaries/calculate/<uuid:employee_id>/', views.calculate_salary_by_employee_view, name='calculate_salary_by_employee'),
     
+    # # RAG知识库管理
+    # path('knowledge/documents/', views.KnowledgeDocumentListCreateView.as_view(), name='knowledge_document_list_create'),
+    # path('knowledge/documents/<uuid:pk>/', views.KnowledgeDocumentDetailView.as_view(), name='knowledge_document_detail'),
+    # path('knowledge/upload/', views.upload_document_view, name='upload_document'),
+    # path('knowledge/search/', views.search_documents_view, name='search_documents'),
+    
+    # # RAG聊天功能
+    # path('chat/sessions/', views.ChatSessionListCreateView.as_view(), name='chat_session_list_create'),
+    # path('chat/sessions/<uuid:pk>/', views.ChatSessionDetailView.as_view(), name='chat_session_detail'),
+    # path('chat/sessions/<uuid:session_id>/messages/', views.chat_session_messages_view, name='chat_session_messages'),
+    # path('chat/', views.chat_view, name='chat'),
+    
+    # # RAG系统管理
+    # path('rag/stats/', views.rag_system_stats_view, name='rag_system_stats'),
 ] 

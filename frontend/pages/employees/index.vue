@@ -554,16 +554,32 @@
                       <p v-if="editErrors.phone" class="mt-1 text-sm text-red-600">{{ editErrors.phone }}</p>
                     </div>
 
+                    <!-- 部门 -->
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">部门 *</label>
+                      <select
+                        v-model="editForm.department_ref"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                        :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': editErrors.department }"
+                      >
+                        <option value="">请选择部门</option>
+                        <option v-for="dept in departments" :key="dept.id" :value="dept.id">{{ dept.name }}</option>
+                      </select>
+                      <p v-if="editErrors.department" class="mt-1 text-sm text-red-600">{{ editErrors.department }}</p>
+                    </div>
+
                     <!-- 职称 -->
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">职称</label>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">职称 *</label>
                       <select
                         v-model="editForm.position"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                        :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': editErrors.position }"
                       >
                         <option value="">请选择职称</option>
                         <option v-for="pos in uniquePositions" :key="pos" :value="pos">{{ pos }}</option>
                       </select>
+                      <p v-if="editErrors.position" class="mt-1 text-sm text-red-600">{{ editErrors.position }}</p>
                     </div>
 
                     <!-- 员工状态 -->
@@ -618,15 +634,22 @@
             <button
               @click="updateEmployeeAction"
               :disabled="updating"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              class="save-button"
             >
-              <div v-if="updating" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              {{ updating ? '更新中...' : '保存更改' }}
+              <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+                <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+              </svg>
+              <span class="text">{{ updating ? '更新中...' : '保存更改' }}</span>
+              <span class="circle"></span>
+              <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+                <path d="m16.172 11-5.364-5.364 1.414-1.414L20 12l-7.778 7.778-1.414-1.414L16.172 13H4v-2z"></path>
+              </svg>
+              <div v-if="updating" class="loading-spinner"></div>
             </button>
             <button
               @click="closeEditModal"
               :disabled="updating"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              class="cancel-button"
             >
               取消
             </button>
@@ -852,7 +875,33 @@ const uniqueDepartments = computed(() => {
 const uniquePositions = computed(() => {
   // Get unique positions from all employees data
   const positions = new Set(allEmployees.value.map(emp => emp.position).filter(Boolean))
-  return Array.from(positions).sort()
+  const positionsArray = Array.from(positions).sort()
+  
+  // 如果没有从员工数据中获取到职称，提供默认职称列表
+  if (positionsArray.length === 0) {
+    return [
+      '总经理',
+      '副总经理',
+      '部门经理',
+      '高级工程师',
+      '工程师',
+      '初级工程师',
+      '人事经理',
+      '人事专员',
+      '财务经理',
+      '会计师',
+      '市场经理',
+      '市场专员',
+      '运营经理',
+      '运营专员',
+      '客服主管',
+      '客服专员',
+      '行政主管',
+      '行政专员'
+    ]
+  }
+  
+  return positionsArray
 })
 
 // Computed property for unique hire years
@@ -1106,6 +1155,16 @@ const validateEditForm = () => {
     editErrors.value.phone = '请输入有效的手机号码'
   }
   
+  // 部门验证
+  if (!editForm.value.department_ref) {
+    editErrors.value.department = '请选择部门'
+  }
+  
+  // 职称验证
+  if (!editForm.value.position) {
+    editErrors.value.position = '请选择职称'
+  }
+  
   // 基础工资验证
   if (!editForm.value.base_salary || editForm.value.base_salary <= 0) {
     editErrors.value.base_salary = '请输入有效的基础工资'
@@ -1268,5 +1327,173 @@ const exportEmployees = () => {
   width: 220px;
   height: 220px;
   opacity: 1;
+}
+
+/* Save Button Styles */
+.save-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 32px;
+  border: 3px solid;
+  border-color: #10b981;
+  font-size: 14px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 50px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  transform: translateY(0);
+  width: auto;
+  margin-left: 12px;
+}
+
+.save-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.save-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.save-button svg {
+  position: absolute;
+  width: 20px;
+  fill: white;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.save-button .arr-1 {
+  right: 12px;
+}
+
+.save-button .arr-2 {
+  left: -25%;
+}
+
+.save-button .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.save-button .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-8px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.save-button:hover:not(:disabled) {
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  color: #065f46;
+  border-radius: 12px;
+  transform: translateY(-2px);
+}
+
+.save-button:hover:not(:disabled) .arr-1 {
+  right: -25%;
+}
+
+.save-button:hover:not(:disabled) .arr-2 {
+  left: 12px;
+}
+
+.save-button:hover:not(:disabled) .text {
+  transform: translateX(8px);
+}
+
+.save-button:hover:not(:disabled) svg {
+  fill: #065f46;
+}
+
+.save-button:active:not(:disabled) {
+  scale: 0.98;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.save-button:hover:not(:disabled) .circle {
+  width: 180px;
+  height: 180px;
+  opacity: 1;
+}
+
+.loading-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  z-index: 10;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Cancel Button Styles */
+.cancel-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  background-color: white;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+  color: #374151;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cancel-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cancel-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (min-width: 640px) {
+  .cancel-button {
+    margin-top: 0;
+    margin-left: 12px;
+    width: auto;
+  }
 }
 </style> 

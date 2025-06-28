@@ -1,6 +1,11 @@
 <template>
+  <!-- 
+    整体设计: 
+    - 与登录页面共享相同的设计语言，包括动态的渐变背景和动画装饰元素，以保持品牌和视觉风格的一致性。
+    - 这种一致性让用户在不同页面间切换时感觉流畅自然。
+   -->
   <div class="min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
-    <!-- 背景装饰元素 -->
+    <!-- 背景装饰元素 (与登录页相同) -->
     <div class="absolute inset-0 overflow-hidden">
       <!-- 大圆形装饰 -->
       <div class="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-sky-200/30 to-indigo-200/30 rounded-full blur-3xl animate-pulse"></div>
@@ -37,6 +42,7 @@
     <div class="max-w-md w-full space-y-8 relative z-10">
       <!-- Logo and Title -->
       <div class="text-center">
+        <!-- 采用了不同的图标和颜色，以在视觉上区分注册和登录操作 -->
         <div class="mx-auto h-16 w-16 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
           <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
@@ -46,7 +52,7 @@
         <p class="mt-2 text-sm text-gray-600">加入企业管理系统</p>
       </div>
 
-      <!-- Register Form -->
+      <!-- 注册表单卡片 -->
       <div class="bg-white/80 backdrop-blur-sm rounded-xl shadow-xl border border-white/20 p-8">
         <form @submit.prevent="handleRegister" class="space-y-6">
           <!-- Username Field -->
@@ -134,7 +140,7 @@
             <p v-if="errors.password" class="mt-1 text-sm text-red-600">{{ errors.password }}</p>
           </div>
 
-          <!-- Confirm Password Field -->
+          <!-- Confirm Password Field: 额外的字段用于确保用户正确输入密码 -->
           <div>
             <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
               确认密码 <span class="text-red-500">*</span>
@@ -171,7 +177,7 @@
             <p v-if="errors.confirmPassword" class="mt-1 text-sm text-red-600">{{ errors.confirmPassword }}</p>
           </div>
 
-          <!-- Terms Agreement -->
+          <!-- Terms Agreement Checkbox: 法律合规性要求，确保用户同意相关条款 -->
           <div>
             <div class="flex items-start">
               <input
@@ -192,7 +198,7 @@
             <p v-if="errors.agreeTerms" class="mt-1 text-sm text-red-600">{{ errors.agreeTerms }}</p>
           </div>
 
-          <!-- Error Message -->
+          <!-- 全局注册错误信息 -->
           <div v-if="registerError" class="bg-red-50 border border-red-200 rounded-lg p-3">
             <div class="flex">
               <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +208,7 @@
             </div>
           </div>
 
-          <!-- Submit Button -->
+          <!-- 提交按钮 -->
           <button
             type="submit"
             :disabled="loading"
@@ -231,15 +237,21 @@
 </template>
 
 <script setup>
-// 设置页面布局
+// --- 页面元数据 ---
 definePageMeta({
-  layout: false
+  layout: false // 注册页同样使用无布局的独立页面
 })
 
-// 使用认证store
+// --- 状态管理 ---
 const authStore = useAuthStore()
 
-// 响应式数据
+// --- 响应式数据 ---
+/**
+ * 注册表单的响应式数据模型。
+ * 设计思路:
+ * - 包含了所有注册所需的字段，包括 `confirmPassword` 和 `agreeTerms`，
+ *   这些是登录表单所没有的。
+ */
 const form = ref({
   username: '',
   email: '',
@@ -248,12 +260,30 @@ const form = ref({
   agreeTerms: false
 })
 
+/**
+ * 存储字段级别的验证错误。
+ */
 const errors = ref({})
+
+/**
+ * 存储全局的注册错误。
+ */
 const registerError = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 
-// 表单验证
+// --- 方法 ---
+/**
+ * 客户端表单验证。
+ * 设计思路:
+ * - **更全面的规则**: 相比登录，注册的验证规则更严格。
+ *   - 验证用户名长度和字符集。
+ *   - 使用正则表达式验证邮箱格式。
+ *   - 检查密码长度。
+ *   - 确认两次输入的密码是否一致。
+ *   - 确保用户已勾选同意条款。
+ * - 这些规则确保了提交到后端的数据有较高的质量。
+ */
 const validateForm = () => {
   errors.value = {}
   
@@ -290,7 +320,19 @@ const validateForm = () => {
   return Object.keys(errors.value).length === 0
 }
 
-// 注册处理
+/**
+ * 注册处理函数。
+ * 设计思路:
+ * - **调用 store 的 register action**: 将注册逻辑委托给 `authStore`。
+ * - **成功后的重定向**:
+ *   - `await navigateTo('/login?message=注册成功，请登录')`: 这是关键。
+ *   - 注册成功后，并不直接为用户登录，而是将用户重定向到登录页面，并附带一个查询参数 `message`。
+ *   - 这样做是出于安全和流程清晰的考虑：
+ *     1. 分离了注册和登录的流程。
+ *     2. 可能需要用户进行邮箱验证等后续步骤才能登录。
+ *     3. 登录页可以解析 URL 中的 `message` 参数，向用户显示一个成功的提示信息，引导他们进行下一步操作。
+ * - **错误处理**: 与登录页面类似，捕获并显示来自 store 的错误信息。
+ */
 const handleRegister = async () => {
   if (!validateForm()) {
     return
@@ -299,14 +341,14 @@ const handleRegister = async () => {
   registerError.value = ''
   
   try {
-    // 使用认证store注册
+    // 使用认证store进行注册
     await authStore.register({
       username: form.value.username,
       email: form.value.email,
       password: form.value.password
     })
     
-    // 注册成功，跳转到登录页面
+    // 注册成功，跳转到登录页面并附带成功提示信息
     await navigateTo('/login?message=注册成功，请登录')
     
   } catch (error) {
@@ -323,15 +365,16 @@ const handleRegister = async () => {
   }
 }
 
-// 计算属性
+// --- 计算属性 ---
 const loading = computed(() => authStore.loading)
 
-// 页面标题
+// --- SEO 和浏览器标签页 ---
 useHead({
   title: '注册 - 企业管理系统'
 })
 
-// 检查是否已登录
+// --- 生命周期钩子 ---
+// 与登录页逻辑相同，防止已登录用户访问注册页。
 onMounted(() => {
   if (authStore.isAuthenticated) {
     navigateTo('/')
@@ -340,7 +383,10 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 自定义动画 */
+/* 
+  样式与登录页共享，以保持视觉一致性。
+  scoped 属性确保这些样式只作用于当前组件，不会泄露到全局。
+*/
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);

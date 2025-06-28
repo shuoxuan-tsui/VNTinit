@@ -275,3 +275,27 @@ LOGGING = {
 
 # Create logs directory if it doesn't exist
 os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
+
+# # RAG and AI settings @start
+# RAG_SETTINGS = {
+#     'VECTOR_DB_PATH': os.path.join(BASE_DIR, 'vector_db'),
+#     'EMBEDDING_MODEL': 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',  # 支持中文
+#     'CHUNK_SIZE': 1000,
+#     'CHUNK_OVERLAP': 200,
+#     'TOP_K_RESULTS': 5,
+#     'TEMPERATURE': 0.7,
+# }
+
+# # OpenAI settings (可选，也可以使用环境变量)
+# OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+# OPENAI_API_BASE = os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1')
+
+# # 文档上传设置
+# DOCUMENT_UPLOAD_PATH = os.path.join(MEDIA_ROOT, 'documents')
+# ALLOWED_DOCUMENT_TYPES = ['.pdf', '.docx', '.txt', '.md']
+# MAX_DOCUMENT_SIZE = 10 * 1024 * 1024  # 10MB
+
+# # 确保目录存在
+# os.makedirs(RAG_SETTINGS['VECTOR_DB_PATH'], exist_ok=True)
+# os.makedirs(DOCUMENT_UPLOAD_PATH, exist_ok=True)
+# # @end

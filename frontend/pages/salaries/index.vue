@@ -133,8 +133,9 @@
               <th
                 v-for="column in tableColumns"
                 :key="column.key"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                @click="column.sortable && toggleSort(column.key)"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                :class="{ 'cursor-pointer hover:bg-gray-100': column.sortable }"
+                @click.stop="column.sortable && toggleSort(column.key)"
               >
                 <div class="flex items-center space-x-1">
                   <span>{{ column.label }}</span>
@@ -486,40 +487,46 @@
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue'
 
-// 页面元数据
+// --- 页面元数据 ---
+// 为页面设置 'default' 布局，这通常意味着它会包含网站的通用页眉、页脚和导航。
 definePageMeta({
   layout: 'default'
 })
 
-// 使用API
+// --- API 组合式函数 ---
+// 引入封装好的 API 调用逻辑。这种方式使得组件更专注于视图和状态管理，
+// 而将数据获取的细节（如端点、头部信息等）抽象出去，提高了代码的可维护性和复用性。
 const salaryApi = useSalaryApi()
 const employeeApi = useEmployeeApi()
 const departmentApi = useDepartmentApi()
 
-// 响应式数据
-const loading = ref(false)
-const calculating = ref(false)
-const searchQuery = ref('')
-const showCalculateModal = ref(false)
-const showDetailModal = ref(false)
-const showEditModal = ref(false)
-const confirmDeleteModal = ref(false)
-const selectedRecord = ref(null)
+// --- 响应式状态 ---
+// UI 状态
+const loading = ref(false) // 控制表格加载状态的显示，在数据获取期间向用户提供反馈。
+const calculating = ref(false) // 控制计算薪资模态框中提交按钮的状态，防止重复提交。
+const showCalculateModal = ref(false) // 控制计算薪资模态框的可见性。
+const showDetailModal = ref(false) // 控制薪资详情模态框的可见性。
+const showEditModal = ref(false) // 控制编辑薪资模态框的可见性。
+const confirmDeleteModal = ref(false) // 控制删除确认模态框的可见性。
+const selectedRecord = ref(null) // 存储用户当前选中操作的薪资记录。
 
-// 筛选条件
-const filters = ref({
+// 搜索与筛选
+const searchQuery = ref('') // 绑定搜索输入框的值。
+const filters = ref({ // 存储筛选条件。这些条件将作为参数发送到后端进行数据过滤。
   department: '',
   salaryPeriod: '',
   salaryRange: ''
 })
 
 // 排序
-const sort = ref({
+const sort = ref({ // 存储排序字段和方向，同样会发送到后端。
   field: '',
   direction: 'asc'
 })
 
 // 分页
+// 与员工页面不同，薪资记录可能非常多，因此采用后端分页是更高效的策略。
+// 前端只负责维护当前页码、每页大小，并将这些信息发送给后端。
 const pagination = ref({
   currentPage: 1,
   pageSize: 20,
@@ -527,29 +534,31 @@ const pagination = ref({
   totalPages: 0
 })
 
-// 计算薪资表单
+// 表单数据
+// 使用 reactive 来创建响应式对象，适用于管理一组相关的表单字段。
 const calculateForm = reactive({
   employeeId: '',
   salaryPeriod: '',
   bonus: 0,
   deduction: 0
 })
-
-// 编辑表单
 const editForm = reactive({
   bonus: 0,
   deduction: 0
 })
 
-// 数据
-const salaryRecords = ref([])
-const employees = ref([])
-const departments = ref([])
+// 核心数据
+const salaryRecords = ref([]) // 存储从后端获取的当前页的薪资记录。
+const employees = ref([]) // 存储员工列表，用于"计算薪资"模态框的下拉选择。
+const departments = ref([]) // 存储部门列表，用于筛选。
 
-// 用户权限
+// 权限控制
+// 在实际应用中，此值应从用户状态管理（如 Pinia/Vuex）中获取。
+// 这里硬编码为 true 是为了方便开发和演示。
 const isAdmin = ref(true)
 
 // 表格列定义
+// 将列配置抽离出来，使模板更简洁，并且方便动态修改列（例如根据权限显示/隐藏列）。
 const tableColumns = [
   { key: 'employee_name', label: '员工姓名', sortable: true },
   { key: 'employee_id', label: '工号', sortable: true },
@@ -564,48 +573,47 @@ const tableColumns = [
   { key: 'pay_date', label: '发放日期', sortable: true }
 ]
 
-// 计算属性
+// --- 计算属性 ---
+/**
+ * @description 计算分页导航中应显示的页码。
+ * 当页数过多时，此逻辑可以生成一个紧凑且用户友好的分页控件（如 "1 ... 5 6 7 ... 12"），
+ * 而不是将所有页码都列出来，从而改善了大规模数据下的用户体验。
+ */
 const visiblePages = computed(() => {
   const pages = []
   const total = pagination.value.totalPages
   const current = pagination.value.currentPage
   
   if (total <= 7) {
-    for (let i = 1; i <= total; i++) {
-      pages.push(i)
-    }
+    for (let i = 1; i <= total; i++) pages.push(i);
   } else {
     if (current <= 4) {
-      for (let i = 1; i <= 5; i++) {
-        pages.push(i)
-      }
-      if (total > 5) {
-        pages.push('...')
-        pages.push(total)
-      }
+      for (let i = 1; i <= 5; i++) pages.push(i);
+      pages.push('...');
+      pages.push(total);
     } else if (current >= total - 3) {
-      pages.push(1)
-      if (total > 5) {
-        pages.push('...')
-      }
-      for (let i = Math.max(total - 4, 1); i <= total; i++) {
-        pages.push(i)
-      }
+      pages.push(1);
+      pages.push('...');
+      for (let i = Math.max(total - 4, 1); i <= total; i++) pages.push(i);
     } else {
-      pages.push(1)
-      pages.push('...')
-      for (let i = current - 1; i <= current + 1; i++) {
-        pages.push(i)
-      }
-      pages.push('...')
-      pages.push(total)
+      pages.push(1);
+      pages.push('...');
+      for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+      pages.push('...');
+      pages.push(total);
     }
   }
   
-  return pages
+  return pages.filter((val, index, self) => self.indexOf(val) === index); // 移除可能的重复项
 })
 
-// 方法
+// --- 方法 ---
+
+/**
+ * @description 核心函数：从后端加载薪资记录。
+ * 它构建API请求参数，包括分页、排序和筛选条件。
+ * 这是后端分页和筛选策略的典型实现。
+ */
 const loadSalaryRecords = async () => {
   loading.value = true
   try {
@@ -616,7 +624,7 @@ const loadSalaryRecords = async () => {
       department: filters.value.department,
       salary_period: filters.value.salaryPeriod,
     }
-    // 薪资范围转为 min / max
+    // 将薪资范围 "5000-10000" 转换为 min_salary 和 max_salary 参数
     if (filters.value.salaryRange) {
       const range = filters.value.salaryRange
       if (range.includes('-')) {
@@ -627,17 +635,17 @@ const loadSalaryRecords = async () => {
         apiParams.min_salary = range.replace('+', '')
       }
     }
-    // 排序
+    // 添加排序参数
     if (sort.value.field) {
       apiParams.ordering = sort.value.direction === 'asc' ? sort.value.field : `-${sort.value.field}`
     }
     
-    // 移除空的筛选参数
-    for (const key in apiParams) {
+    // 移除所有空值的参数，保持请求的整洁性
+    Object.keys(apiParams).forEach(key => {
       if (apiParams[key] === '' || apiParams[key] === null || apiParams[key] === undefined) {
         delete apiParams[key]
       }
-    }
+    });
 
     const response = await salaryApi.getSalaries(apiParams)
     if (response && response.results) {
@@ -645,6 +653,7 @@ const loadSalaryRecords = async () => {
       pagination.value.totalItems = response.count || response.results.length
       pagination.value.totalPages = Math.ceil(pagination.value.totalItems / pagination.value.pageSize)
     } else {
+      // 在API响应无效时，重置数据状态，避免UI显示旧数据
       salaryRecords.value = []
       pagination.value.totalItems = 0
       pagination.value.totalPages = 0
@@ -659,9 +668,13 @@ const loadSalaryRecords = async () => {
   }
 }
 
+/**
+ * @description 加载员工列表，用于"计算薪资"模态框中的下拉选项。
+ */
 const loadEmployees = async () => {
   try {
-    const response = await employeeApi.getEmployees()
+    // 这里获取所有员工，因为下拉列表通常需要完整数据。
+    const response = await employeeApi.getEmployees({ page_size: 1000 })
     if (response && response.results) {
       employees.value = response.results.map(emp => ({
         id: emp.id,
@@ -674,6 +687,9 @@ const loadEmployees = async () => {
   }
 }
 
+/**
+ * @description 加载部门列表，用于筛选下拉选项。
+ */
 const loadDepartments = async () => {
   try {
     const response = await departmentApi.getDepartments()
@@ -685,15 +701,28 @@ const loadDepartments = async () => {
   }
 }
 
+/**
+ * @description 防抖处理的搜索函数。
+ * 使用防抖可以防止用户在快速输入时频繁触发API请求，
+ * 只有在用户停止输入一段时间（300毫秒）后才执行搜索，
+ * 极大地优化了性能并减少了服务器负载。
+ */
 const debouncedSearch = debounce(() => {
   applyFilters()
 }, 300)
 
+/**
+ * @description 应用筛选条件并重新加载数据。
+ */
 const applyFilters = () => {
+  pagination.value.currentPage = 1; // 筛选条件改变时，应回到第一页
   console.log('应用筛选:', { searchQuery: searchQuery.value, filters: filters.value })
   loadSalaryRecords()
 }
 
+/**
+ * @description 切换排序并重新加载数据。
+ */
 const toggleSort = (field) => {
   if (sort.value.field === field) {
     sort.value.direction = sort.value.direction === 'asc' ? 'desc' : 'asc'
@@ -704,6 +733,9 @@ const toggleSort = (field) => {
   loadSalaryRecords()
 }
 
+/**
+ * @description 获取排序图标，为用户提供视觉反馈。
+ */
 const getSortIcon = (field) => {
   if (sort.value.field !== field) {
     return 'heroicons:chevron-up-down'
@@ -711,6 +743,9 @@ const getSortIcon = (field) => {
   return sort.value.direction === 'asc' ? 'heroicons:chevron-up' : 'heroicons:chevron-down'
 }
 
+/**
+ * @description 切换分页。
+ */
 const changePage = (page) => {
   if (page >= 1 && page <= pagination.value.totalPages) {
     pagination.value.currentPage = page
@@ -718,13 +753,20 @@ const changePage = (page) => {
   }
 }
 
+/**
+ * @description 显示薪资详情模态框。
+ */
 const viewSalaryDetail = (record) => {
   selectedRecord.value = record
   showDetailModal.value = true
 }
 
+/**
+ * @description 打印薪资条。
+ * 这是一个简单的实现，通过打开一个新窗口并调用浏览器的打印功能。
+ * 在实际应用中，这里可以渲染一个更专业、格式化的薪资条模板。
+ */
 const printSalary = (record) => {
-  // 简单打印实现：新窗口渲染 JSON，可根据需要替换模板。
   const printWindow = window.open('', '_blank')
   printWindow.document.write(`<pre>${JSON.stringify(record, null, 2)}</pre>`)  
   printWindow.document.close()
@@ -733,6 +775,9 @@ const printSalary = (record) => {
   printWindow.close()
 }
 
+/**
+ * @description 打开编辑模态框并填充当前记录的数据。
+ */
 const editSalaryRecord = (record) => {
   selectedRecord.value = record
   editForm.bonus = Number(record.bonus || 0)
@@ -740,6 +785,9 @@ const editSalaryRecord = (record) => {
   showEditModal.value = true
 }
 
+/**
+ * @description 提交编辑后的薪资数据。
+ */
 const submitEditSalary = async () => {
   try {
     const payload = {
@@ -748,7 +796,7 @@ const submitEditSalary = async () => {
     }
     const res = await salaryApi.updateSalary(selectedRecord.value.id, payload)
     if (res && res.success !== false) {
-      await loadSalaryRecords()
+      await loadSalaryRecords() // 成功后刷新数据
       showEditModal.value = false
     }
   } catch (err) {
@@ -756,16 +804,22 @@ const submitEditSalary = async () => {
   }
 }
 
+/**
+ * @description 显示删除确认模态框，防止用户误操作。
+ */
 const confirmDeleteSalary = (record) => {
   selectedRecord.value = record
   confirmDeleteModal.value = true
 }
 
+/**
+ * @description 执行删除操作。
+ */
 const deleteSalaryRecord = async () => {
   try {
     const res = await salaryApi.deleteSalary(selectedRecord.value.id)
     if (res && res.success !== false) {
-      await loadSalaryRecords()
+      await loadSalaryRecords() // 成功后刷新数据
       confirmDeleteModal.value = false
     }
   } catch (err) {
@@ -773,6 +827,9 @@ const deleteSalaryRecord = async () => {
   }
 }
 
+/**
+ * @description 关闭计算薪资模态框并重置表单。
+ */
 const closeCalculateModal = () => {
   showCalculateModal.value = false
   Object.assign(calculateForm, {
@@ -783,12 +840,16 @@ const closeCalculateModal = () => {
   })
 }
 
+/**
+ * @description 核心业务逻辑：计算和生成薪资。
+ * 此函数处理两种情况：为单个员工或为所有员工生成薪资记录。
+ * 这是通过检查 `calculateForm.employeeId` 是否有值来区分的。
+ */
 const calculateSalary = async () => {
   calculating.value = true
   try {
     console.log('计算薪资:', calculateForm)
     
-    // 准备薪资计算数据
     const salaryData = {
       salary_period: calculateForm.salaryPeriod,
       bonus: calculateForm.bonus || 0,
@@ -797,21 +858,20 @@ const calculateSalary = async () => {
     
     let response
     if (calculateForm.employeeId) {
-      // 为特定员工计算薪资
+      // 为单个员工计算薪资
       response = await salaryApi.calculateSalary(calculateForm.employeeId, salaryData)
     } else {
-      // 为所有员工生成薪资
+      // 为所有员工批量生成薪资
       response = await salaryApi.generateSalaries(salaryData)
     }
     
     if (response.success || response.data) {
-      // 重新加载薪资记录
-      await loadSalaryRecords()
+      await loadSalaryRecords() // 成功后刷新列表
       closeCalculateModal()
       console.log('薪资计算完成')
     } else {
       console.error('薪资计算失败:', response.error)
-      // 可以在这里添加错误提示
+      // 可以在此处添加用户友好的错误提示
     }
   } catch (error) {
     console.error('计算薪资失败:', error)
@@ -820,50 +880,65 @@ const calculateSalary = async () => {
   }
 }
 
+// --- 格式化辅助函数 ---
+
+/**
+ * @description 格式化货币值。
+ * 统一处理了 null、undefined 和 NaN 等无效输入，确保UI显示的健壮性。
+ */
 const formatCurrency = (amount) => {
-  // 处理空值、null、undefined和NaN
   if (amount === null || amount === undefined || isNaN(amount)) {
     return '0.00'
   }
-  
-  // 确保是数字类型
   const numAmount = Number(amount)
   if (isNaN(numAmount)) {
     return '0.00'
   }
-  
   return new Intl.NumberFormat('zh-CN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(numAmount)
 }
 
+/**
+ * @description 格式化日期。
+ */
 const formatDate = (dateString) => {
   if (!dateString) return ''
   return new Date(dateString).toLocaleDateString('zh-CN')
 }
 
+/**
+ * @description 格式化薪资期间（例如 '2024-05' -> '2024年05月'）。
+ */
 const formatSalaryPeriod = (period) => {
   if (!period) return ''
   const [year, month] = period.split('-')
   return `${year}年${month}月`
 }
 
-// 计算应发工资
+// --- 客户端计算 ---
+// 这些函数用于在前端动态计算一些值，当API没有直接返回这些字段时非常有用。
+// 它们可以减轻后端的计算压力，并使前端展示更灵活。
+
 const calculateGrossSalary = (record) => {
   const baseSalary = Number(record.base_salary_snapshot || record.base_salary || 0)
   const bonus = Number(record.bonus || 0)
   return baseSalary + bonus
 }
 
-// 计算实发工资
 const calculateNetSalary = (record) => {
   const grossSalary = record.gross_salary || calculateGrossSalary(record)
   const deduction = Number(record.deduction || 0)
   return Number(grossSalary) - deduction
 }
 
-// 防抖函数
+// --- 工具函数 ---
+/**
+ * @description 一个通用的防抖函数。
+ * @param {Function} func - 需要防抖的函数。
+ * @param {number} wait - 延迟时间（毫秒）。
+ */
 function debounce(func, wait) {
   let timeout
   return function executedFunction(...args) {
@@ -876,19 +951,23 @@ function debounce(func, wait) {
   }
 }
 
-// 生命周期
+// --- 生命周期钩子 ---
+/**
+ * @description 组件挂载后执行初始化操作。
+ * 包括开发环境下的自动登录和加载初始数据。
+ * 将默认的薪资期间设置为当前月份，提升了用户体验。
+ */
 onMounted(() => {
   if (process.client) {
-    // 尝试自动登录，如果未登录
     const existingToken = localStorage.getItem('auth_token');
     if (!existingToken) {
-      const config = useRuntimeConfig();
+      // 方便开发，自动登录
       $fetch('/api/auth/login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: { username: 'admin', password: 'admin123' }
       }).then(loginResponse => {
-        if (loginResponse && loginResponse.success && loginResponse.data && loginResponse.data.token) {
+        if (loginResponse?.success && loginResponse.data?.token) {
           localStorage.setItem('auth_token', loginResponse.data.token);
           localStorage.setItem('user_info', JSON.stringify(loginResponse.data.user));
           console.log('Auto-login successful in salaries page');
@@ -898,6 +977,7 @@ onMounted(() => {
         }
       }).catch(err => {
         console.error('Auto-login failed in salaries page:', err);
+        // 即使登录失败，也尝试加载数据，因为某些数据可能是公开的
         loadSalaryRecords();
         loadEmployees();
         loadDepartments();
@@ -909,7 +989,7 @@ onMounted(() => {
     }
   }
   
-  // 设置默认薪资期间为当前月份
+  // 将计算薪资表单的默认期间设置为当前月份，方便用户操作。
   const now = new Date()
   calculateForm.salaryPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 })
@@ -923,14 +1003,14 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   padding: 16px 36px;
-  border: 4px solid #3b82f6;
+  border: 4px solid #3b83f659;
   border-color: #3b82f6;
   font-size: 16px;
-  background-color: #3b82f6;
+  background-color: #3b83f6;
   border-radius: 100px;
   font-weight: 600;
   color: white;
-  box-shadow: 0 0 0 2px #3b82f6;
+  box-shadow: 0 0 0 2px #3b83f665;
   cursor: pointer;
   overflow: hidden;
   transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);

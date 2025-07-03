@@ -48,6 +48,12 @@ class DepartmentSerializer(serializers.ModelSerializer):
     
     def validate_phone(self, value):
         """验证电话号码格式"""
+        # 这个正则表达式匹配以下字符的组合:
+        # ^ - 字符串开始
+        # [\d\-\+\(\)\s] - 匹配数字、连字符、加号、括号或空白字符
+        # + - 前面的字符可以出现一次或多次
+        # $ - 字符串结束
+        # 整体意思是: 字符串只能包含数字、-、+、(、)和空格
         if value and not re.match(r'^[\d\-\+\(\)\s]+$', value):
             raise serializers.ValidationError("请输入有效的电话号码")
         return value

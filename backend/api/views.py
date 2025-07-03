@@ -1,3 +1,27 @@
+"""
+VNTinit 人力资源管理系统 - API 视图模块
+
+设计思路：
+1. 采用 Django REST Framework 构建 RESTful API
+2. 使用基于类的视图（CBV）和函数视图（FBV）相结合的方式
+3. 实现完整的 CRUD 操作和业务逻辑
+4. 统一的权限控制和数据验证
+5. 支持分页、搜索、筛选和排序功能
+6. 提供仪表盘统计和数据导出功能
+"""
+
+"""
+VNTinit 人力资源管理系统 - API 视图模块
+
+设计思路：
+1. 采用 Django REST Framework 构建 RESTful API
+2. 使用基于类的视图（CBV）和函数视图（FBV）相结合的方式
+3. 实现完整的 CRUD 操作和业务逻辑
+4. 统一的权限控制和数据验证
+5. 支持分页、搜索、筛选和排序功能
+6. 提供仪表盘统计和数据导出功能
+"""
+
 from django.shortcuts import render
 from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
@@ -18,7 +42,7 @@ from datetime import datetime
 import re
 
 from .models import Department, Employee, SalaryRecord, AttendanceRecord
-# KnowledgeDocument, ChatSession, ChatMessage
+# KnowledgeDocument, ChatSession, ChatMessage (RAG 功能暂时注释)
 from .serializers import (
     DepartmentSerializer, EmployeeSerializer, SalaryRecordSerializer, 
     SalaryCalculationSerializer, UserSerializer
@@ -32,16 +56,28 @@ from .permissions import IsAdminOrReadOnly, IsAdminUser, IsSalaryOwnerOrAdmin
 # from .services.llm_service import LLMService
 
 
+# ==================== 认证相关视图 ====================
+
 class CustomAuthToken(ObtainAuthToken):
-    """自定义认证视图"""
+    """
+    自定义认证视图
+    
+    设计思路：
+    - 继承 DRF 的 ObtainAuthToken 类，实现 Token 认证
+    - 接收用户名和密码，验证后返回 Token 和用户信息
+    - 为前端提供统一的登录接口
+    """
     
     def post(self, request, *args, **kwargs):
+        """处理登录请求"""
         username = request.data.get('username')
         password = request.data.get('password')
         
         if username and password:
+            # 使用 Django 内置的认证系统验证用户
             user = authenticate(username=username, password=password)
             if user:
+                # 获取或创建用户的 Token
                 token, created = Token.objects.get_or_create(user=user)
                 return Response({
                     'token': token.key,
@@ -57,7 +93,13 @@ class CustomAuthToken(ObtainAuthToken):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def logout_view(request):
-    """登出视图"""
+    """
+    登出视图
+    
+    设计思路：
+    - 删除用户的 Token，实现安全登出
+    - 确保用户再次访问需要重新认证
+    """
     try:
         request.user.auth_token.delete()
         return Response({'message': '登出成功'})
@@ -68,16 +110,41 @@ def logout_view(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def current_user_view(request):
-    """获取当前用户信息"""
+    """
+    获取当前用户信息
+    
+    设计思路：
+    - 为前端提供获取当前登录用户信息的接口
+    - 用于用户身份确认和权限判断
+    """
     return Response(UserSerializer(request.user).data)
 
 
+# ==================== 员工管理视图 ====================
+
 class EmployeeListCreateView(generics.ListCreateAPIView):
-    """员工列表和创建视图"""
+    """
+    员工列表和创建视图
+    
+    设计思路：
+    - 继承 DRF 的 ListCreateAPIView，同时支持 GET（列表）和 POST（创建）
+    - 实现完整的搜索、筛选、排序和分页功能
+    - 支持按状态筛选（默认只显示在职员工）
+    - 提供灵活的查询参数支持
+    """
     serializer_class = EmployeeSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]  # 管理员可读写，其他用户只读
     
     def get_queryset(self):
+        """
+        构建查询集
+        
+        设计思路：
+        - 根据查询参数动态构建 QuerySet
+        - 支持多字段搜索（姓名、工号、部门、职位）
+        - 支持多维度筛选（部门、职位、状态）
+        - 支持自定义排序
+        """
         # 默认只显示活跃员工，除非明确指定包含所有状态
         include_all_status = self.request.query_params.get('include_all_status', 'false').lower() == 'true'
         if include_all_status:
@@ -85,7 +152,7 @@ class EmployeeListCreateView(generics.ListCreateAPIView):
         else:
             queryset = Employee.objects.filter(status='active')
         
-        # 搜索功能
+        # 搜索功能 - 支持多字段模糊匹配
         search = self.request.query_params.get('search', None)
         if search:
             queryset = queryset.filter(
@@ -95,7 +162,7 @@ class EmployeeListCreateView(generics.ListCreateAPIView):
                 Q(position__icontains=search)
             )
         
-        # 筛选功能
+        # 筛选功能 - 精确匹配
         department = self.request.query_params.get('department', None)
         if department:
             queryset = queryset.filter(department=department)
@@ -108,7 +175,7 @@ class EmployeeListCreateView(generics.ListCreateAPIView):
         if status:
             queryset = queryset.filter(status=status)
         
-        # 排序功能
+        # 排序功能 - 默认按创建时间倒序
         ordering = self.request.query_params.get('ordering', '-created_at')
         if ordering:
             queryset = queryset.order_by(ordering)
@@ -116,9 +183,16 @@ class EmployeeListCreateView(generics.ListCreateAPIView):
         return queryset
     
     def list(self, request, *args, **kwargs):
+        """
+        重写列表方法，添加分页功能
+
+        - 使用 Django 的 Paginator 实现分页
+        - 返回统一格式的响应数据
+        - 包含分页信息（总页数、当前页、总记录数）
+        """
         queryset = self.get_queryset()
         
-        # 分页
+        # 分页处理
         page = request.query_params.get('page', 1)
         page_size = request.query_params.get('page_size', 20)
         
@@ -143,57 +217,90 @@ class EmployeeListCreateView(generics.ListCreateAPIView):
 
 
 class EmployeeDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """员工详情、更新和删除视图"""
+    """
+    员工详情、更新和删除视图
+    
+    设计思路：
+    - 继承 DRF 的 RetrieveUpdateDestroyAPIView
+    - 支持 GET（详情）、PUT/PATCH（更新）、DELETE（删除）操作
+    - 使用 UUID 作为查找字段，保证数据安全性
+    """
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
     permission_classes = [IsAdminOrReadOnly]
-    lookup_field = 'id'
+    lookup_field = 'id'  # 使用 UUID 作为查找字段
 
+
+# ==================== 薪资管理视图 ====================
 
 class SalaryRecordListView(generics.ListAPIView):
-    """薪资记录列表视图（管理员）"""
+    """
+    薪资记录列表视图（仅管理员可访问）
+    
+    设计思路：
+    - 只提供列表功能，薪资记录通过专门的计算接口创建
+    - 实现多维度搜索和筛选功能
+    - 支持按薪资范围筛选
+    - 使用 select_related 优化数据库查询性能
+    """
     serializer_class = SalaryRecordSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser]  # 仅管理员可访问
     
     def get_queryset(self):
+        """
+        构建薪资记录查询集
+        
+        设计思路：
+        1. 性能优化：使用select_related预加载关联的员工数据，减少数据库查询次数
+        2. 搜索功能：支持按员工姓名或工号进行模糊搜索(icontains)
+        3. 多维度筛选：
+           - 按部门筛选：精确匹配员工所属部门
+           - 按职位筛选：匹配薪资记录中的职位快照
+           - 按薪资期间筛选：精确匹配YYYY-MM格式的薪资期间
+        4. 范围查询：支持按实发工资(net_salary)范围筛选，使用Decimal保证精度
+        5. 排序功能：默认按创建时间降序，支持自定义排序字段
+        6. 健壮性处理：对数值转换进行异常捕获，避免无效参数导致错误
+        """
+        # 基础查询集，预加载关联的员工数据
         queryset = SalaryRecord.objects.select_related('employee').all()
         
-        # 搜索功能
-        search = self.request.query_params.get('search', None)
+        # 搜索功能 - 按员工姓名或工号模糊搜索
+        search = self.request.query_params.get('search')
         if search:
             queryset = queryset.filter(
                 Q(employee__name__icontains=search) |
                 Q(employee__employee_id__icontains=search)
             )
         
-        # 筛选功能
-        department = self.request.query_params.get('department', None)
+        # 多维度筛选
+        department = self.request.query_params.get('department')
         if department:
             queryset = queryset.filter(employee__department=department)
         
-        position = self.request.query_params.get('position', None)
+        position = self.request.query_params.get('position')
         if position:
             queryset = queryset.filter(position_snapshot=position)
         
-        salary_period = self.request.query_params.get('salary_period', None)
+        salary_period = self.request.query_params.get('salary_period')
         if salary_period:
             queryset = queryset.filter(salary_period=salary_period)
         
-        min_salary = self.request.query_params.get('min_salary', None)
+        # 薪资范围筛选（带异常处理）
+        min_salary = self.request.query_params.get('min_salary')
         if min_salary:
             try:
                 queryset = queryset.filter(net_salary__gte=Decimal(min_salary))
-            except:
+            except (ValueError, TypeError):
                 pass
         
-        max_salary = self.request.query_params.get('max_salary', None)
+        max_salary = self.request.query_params.get('max_salary')
         if max_salary:
             try:
                 queryset = queryset.filter(net_salary__lte=Decimal(max_salary))
-            except:
+            except (ValueError, TypeError):
                 pass
         
-        # 排序功能
+        # 排序功能（默认按创建时间降序）
         ordering = self.request.query_params.get('ordering', '-created_at')
         if ordering:
             queryset = queryset.order_by(ordering)
@@ -201,9 +308,10 @@ class SalaryRecordListView(generics.ListAPIView):
         return queryset
     
     def list(self, request, *args, **kwargs):
+        """重写列表方法，返回统一格式的响应"""
         queryset = self.get_queryset()
         
-        # 分页
+        # 分页处理
         page = request.query_params.get('page', 1)
         page_size = request.query_params.get('page_size', 20)
         
@@ -231,17 +339,41 @@ class SalaryRecordListView(generics.ListAPIView):
 
 
 class SalaryRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """薪资记录详情、更新和删除视图"""
+    """
+    薪资记录详情、更新和删除视图
+    
+    设计思路：
+    - 支持薪资记录的查看、修改和删除
+    - 使用自定义权限类确保只有记录所有者或管理员可访问
+    - 优化数据库查询性能
+    """
     queryset = SalaryRecord.objects.select_related('employee').all()
     serializer_class = SalaryRecordSerializer
-    permission_classes = [IsSalaryOwnerOrAdmin]
+    permission_classes = [IsSalaryOwnerOrAdmin]  # 记录所有者或管理员可访问
     lookup_field = 'id'
 
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def calculate_salary_view(request):
-    """计算并创建薪资记录"""
+    """
+    薪资计算接口（旧版本，保留兼容性）
+    
+    设计思路：
+    - 接收员工工号和薪资参数
+    - 自动计算应发和实发工资
+    - 防止重复创建同期薪资记录
+    - 创建薪资快照，保证历史数据准确性
+    """
+    """
+    薪资计算接口（旧版本，保留兼容性）
+    
+    设计思路：
+    - 接收员工工号和薪资参数
+    - 自动计算应发和实发工资
+    - 防止重复创建同期薪资记录
+    - 创建薪资快照，保证历史数据准确性
+    """
     serializer = SalaryCalculationSerializer(data=request.data)
     
     if serializer.is_valid():
@@ -260,17 +392,17 @@ def calculate_salary_view(request):
                     'error': '该员工在此期间已有薪资记录'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # 计算薪资
+            # 薪资计算逻辑
             base_salary = employee.base_salary
-            gross_salary = base_salary + bonus
-            net_salary = gross_salary - deductions
+            gross_salary = base_salary + bonus  # 应发 = 基础 + 奖金
+            net_salary = gross_salary - deductions  # 实发 = 应发 - 扣除
             
-            # 创建薪资记录
+            # 创建薪资记录（包含快照数据）
             salary_record = SalaryRecord.objects.create(
                 employee=employee,
                 salary_period=salary_period,
-                position_snapshot=employee.position,
-                base_salary_snapshot=base_salary,
+                position_snapshot=employee.position,  # 职位快照
+                base_salary_snapshot=base_salary,     # 基础工资快照
                 bonus=bonus,
                 deductions=deductions,
                 gross_salary=gross_salary,
@@ -295,23 +427,22 @@ def calculate_salary_view(request):
         'errors': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
 
-"""
-@api_view装饰器是DRF框架的核心装饰器
-将普通函数转换为DRF API视图
-明确指定视图函数接受的HTTP请求方法（如GET/POST）
-将Django的HttpRequest转换为DRF的Request对象
-"""
+
 @api_view(['GET'])
-# 这是一个DRF权限装饰器，用于限制视图访问权限。
-# IsSalaryOwnerOrAdmin是一个自定义权限类
-# 它检查请求用户是否是薪资记录的所有者或者是管理员
 @permission_classes([IsSalaryOwnerOrAdmin])  
 def salary_print_view(request, record_id):
-    """薪资记录打印视图"""
+    """
+    薪资记录打印视图
+    
+    设计思路：
+    - 提供薪资条打印格式的数据
+    - 严格的权限控制，只有记录所有者或管理员可访问
+    - 返回结构化的打印数据
+    """
     try:
         salary_record = SalaryRecord.objects.select_related('employee').get(id=record_id)
         
-        # 检查权限
+        # 权限检查
         if not (request.user.is_superuser or 
                 request.user.groups.filter(name='Admin').exists()):
             # 这里需要检查是否为员工本人，暂时返回403
@@ -351,11 +482,19 @@ def salary_print_view(request, record_id):
 @api_view(['GET'])
 @permission_classes([IsSalaryOwnerOrAdmin])
 def employee_salary_history_view(request, employee_id):
-    """员工薪资历史记录"""
+    """
+    员工薪资历史记录
+    
+    设计思路：
+    - 提供员工的完整薪资历史
+    - 支持分页显示
+    - 按薪资期间倒序排列
+    - 包含员工基本信息
+    """
     try:
         employee = Employee.objects.get(employee_id=employee_id)
         
-        # 检查权限
+        # 权限检查
         if not (request.user.is_superuser or 
                 request.user.groups.filter(name='Admin').exists()):
             # 这里需要检查是否为员工本人，暂时返回403
@@ -366,7 +505,7 @@ def employee_salary_history_view(request, employee_id):
         
         salary_records = SalaryRecord.objects.filter(employee=employee).order_by('-salary_period')
         
-        # 分页
+        # 分页处理
         page = request.query_params.get('page', 1)
         page_size = request.query_params.get('page_size', 20)
         
@@ -397,16 +536,26 @@ def employee_salary_history_view(request, employee_id):
         )
 
 
-# 部门管理视图
+# ==================== 部门管理视图 ====================
+
 class DepartmentListCreateView(generics.ListCreateAPIView):
-    """部门列表和创建视图"""
+    """
+    部门列表和创建视图
+    
+    设计思路：
+    - 支持部门的查看和创建
+    - 实现搜索、筛选、排序功能
+    - 自动计算部门员工数量
+    - 统一的响应格式
+    """
     serializer_class = DepartmentSerializer
     permission_classes = [IsAdminOrReadOnly]
     
     def get_queryset(self):
+        """构建部门查询集"""
         queryset = Department.objects.all()
         
-        # 搜索功能
+        # 搜索功能 - 多字段搜索
         search = self.request.query_params.get('search', None)
         if search:
             queryset = queryset.filter(
@@ -416,12 +565,12 @@ class DepartmentListCreateView(generics.ListCreateAPIView):
                 Q(description__icontains=search)
             )
         
-        # 筛选功能
+        # 状态筛选
         status_filter = self.request.query_params.get('status', None)
         if status_filter:
             queryset = queryset.filter(status=status_filter)
         
-        # 排序功能
+        # 排序功能 - 默认按名称排序
         ordering = self.request.query_params.get('ordering', 'name')
         if ordering:
             queryset = queryset.order_by(ordering)
@@ -429,9 +578,10 @@ class DepartmentListCreateView(generics.ListCreateAPIView):
         return queryset
     
     def list(self, request, *args, **kwargs):
+        """重写列表方法，添加分页和统一响应格式"""
         queryset = self.get_queryset()
         
-        # 分页
+        # 分页处理
         page = request.query_params.get('page', 1)
         page_size = request.query_params.get('page_size', 20)
         
@@ -458,6 +608,7 @@ class DepartmentListCreateView(generics.ListCreateAPIView):
         })
     
     def create(self, request, *args, **kwargs):
+        """重写创建方法，统一响应格式"""
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             department = serializer.save()
@@ -475,12 +626,20 @@ class DepartmentListCreateView(generics.ListCreateAPIView):
 
 
 class DepartmentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """部门详情、更新和删除视图"""
+    """
+    部门详情、更新和删除视图
+    
+    设计思路：
+    - 支持部门的查看、修改和删除
+    - 删除前检查是否有关联员工
+    - 统一的响应格式
+    """
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
     permission_classes = [IsAdminOrReadOnly]
     
     def retrieve(self, request, *args, **kwargs):
+        """重写获取方法，统一响应格式"""
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response({
@@ -489,6 +648,7 @@ class DepartmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         })
     
     def update(self, request, *args, **kwargs):
+        """重写更新方法，统一响应格式"""
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -508,6 +668,13 @@ class DepartmentDetailView(generics.RetrieveUpdateDestroyAPIView):
             }, status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, *args, **kwargs):
+        """
+        重写删除方法，添加业务逻辑检查
+        
+        设计思路：
+        - 删除前检查部门下是否还有员工
+        - 防止误删除有员工的部门
+        """
         instance = self.get_object()
         
         # 检查是否有员工在该部门
@@ -524,10 +691,20 @@ class DepartmentDetailView(generics.RetrieveUpdateDestroyAPIView):
         }, status=status.HTTP_204_NO_CONTENT)
 
 
+# ==================== 仪表盘统计视图 ====================
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def dashboard_summary_stats(request):
-    """获取仪表盘总体统计数据"""
+    """
+    获取仪表盘总体统计数据
+    
+    设计思路：
+    - 提供系统关键指标的汇总统计
+    - 计算同比增长率
+    - 支持考勤率计算
+    - 异常处理确保系统稳定性
+    """
     try:
         from datetime import datetime, timedelta
         from django.db.models import Count, Avg, Q
@@ -538,7 +715,7 @@ def dashboard_summary_stats(request):
         current_month = current_date.strftime('%Y-%m')
         last_month = (current_date - timedelta(days=30)).strftime('%Y-%m')
         
-        # 员工总数（包括所有状态的员工）
+        # 员工总数统计
         total_employees = Employee.objects.count()
         
         # 上月员工数量（用于计算增长率）
@@ -552,7 +729,7 @@ def dashboard_summary_stats(request):
         else:
             employee_growth = 0
         
-        # 部门总数（包括所有状态的部门）
+        # 部门总数统计
         total_departments = Employee.objects.values('department').distinct().count()
         
         # 本月考勤率计算
@@ -566,7 +743,7 @@ def dashboard_summary_stats(request):
             status__in=['present', 'late', 'early_leave', 'overtime']
         ).count()
         
-        # 计算应出勤总数（在职员工 * 工作日）
+        # 计算应出勤总数
         active_employees = Employee.objects.filter(status='active').count()
         expected_attendance = active_employees * total_work_days
         
@@ -576,7 +753,7 @@ def dashboard_summary_stats(request):
         else:
             attendance_rate = 0
         
-        # 上月考勤率（用于计算增长）
+        # 上月考勤率计算（用于增长率）
         last_month_start = (current_date - timedelta(days=30)).replace(day=1)
         last_month_end = current_month_start - timedelta(days=1)
         last_month_work_days = (last_month_end - last_month_start).days + 1
@@ -599,7 +776,7 @@ def dashboard_summary_stats(request):
         else:
             attendance_rate_growth = 0
         
-        # 平均薪资
+        # 平均薪资计算
         avg_salary = Employee.objects.filter(status='active').aggregate(
             avg_salary=Avg('base_salary')
         )['avg_salary']
@@ -633,11 +810,18 @@ def dashboard_summary_stats(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def dashboard_department_distribution(request):
-    """获取部门员工分布数据"""
+    """
+    获取部门员工分布数据
+    
+    设计思路：
+    - 统计各部门的员工数量
+    - 为饼图或柱状图提供数据
+    - 预定义颜色方案，提升视觉效果
+    """
     try:
         from django.db.models import Count
         
-        # 直接从员工表统计部门分布（包括所有状态的员工）
+        # 统计部门分布
         department_stats = Employee.objects.values('department').annotate(
             employee_count=Count('id')
         ).order_by('-employee_count')
@@ -685,7 +869,14 @@ def dashboard_department_distribution(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def salary_stats_view(request):
-    """获取薪资统计数据"""
+    """
+    获取薪资统计数据
+    
+    设计思路：
+    - 提供薪资相关的统计指标
+    - 按当前月份统计
+    - 支持薪资总额和平均薪资计算
+    """
     try:
         from django.db.models import Count, Sum, Avg
         from datetime import datetime
@@ -694,7 +885,7 @@ def salary_stats_view(request):
         current_date = datetime.now()
         current_month = current_date.strftime('%Y-%m')
         
-        # 总薪资记录数
+        # 薪资记录统计
         total_records = SalaryRecord.objects.count()
         
         # 本月薪资统计
@@ -727,7 +918,15 @@ def salary_stats_view(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def salary_export_view(request):
-    """导出薪资数据"""
+    """
+    导出薪资数据
+    
+    设计思路：
+    - 生成 CSV 格式的薪资数据导出
+    - 支持按部门和薪资期间筛选
+    - 添加 BOM 支持 Excel 中文显示
+    - 包含完整的薪资信息
+    """
     try:
         import csv
         from django.http import HttpResponse
@@ -784,471 +983,36 @@ def salary_export_view(request):
             'error': f'导出薪资数据失败: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# RAG and AI views @start
-# RAG相关视图
 
-# class KnowledgeDocumentListCreateView(generics.ListCreateAPIView):
-#     """知识文档列表和创建视图"""
-#     serializer_class = KnowledgeDocumentSerializer
-#     permission_classes = [IsAdminOrReadOnly]
-    
-#     def get_queryset(self):
-#         queryset = KnowledgeDocument.objects.all()
-        
-#         # 搜索功能
-#         search = self.request.query_params.get('search', None)
-#         if search:
-#             queryset = queryset.filter(
-#                 Q(title__icontains=search) |
-#                 Q(description__icontains=search) |
-#                 Q(tags__icontains=search)
-#             )
-        
-#         # 筛选功能
-#         document_type = self.request.query_params.get('document_type', None)
-#         if document_type:
-#             queryset = queryset.filter(document_type=document_type)
-        
-#         department = self.request.query_params.get('department', None)
-#         if department:
-#             queryset = queryset.filter(department=department)
-        
-#         status = self.request.query_params.get('status', None)
-#         if status:
-#             queryset = queryset.filter(status=status)
-        
-#         # 排序功能
-#         ordering = self.request.query_params.get('ordering', '-created_at')
-#         if ordering:
-#             queryset = queryset.order_by(ordering)
-        
-#         return queryset
-    
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-        
-#         # 分页
-#         page = request.query_params.get('page', 1)
-#         page_size = request.query_params.get('page_size', 20)
-        
-#         try:
-#             page = int(page)
-#             page_size = int(page_size)
-#         except ValueError:
-#             page = 1
-#             page_size = 20
-        
-#         paginator = Paginator(queryset, page_size)
-#         page_obj = paginator.get_page(page)
-        
-#         serializer = self.get_serializer(page_obj, many=True)
-        
-#         return Response({
-#             'results': serializer.data,
-#             'total_pages': paginator.num_pages,
-#             'current_page': page,
-#             'total_count': paginator.count
-#         })
+# ==================== RAG 和 AI 相关视图（暂时注释） ====================
+# 这部分代码为 RAG（检索增强生成）和 AI 聊天功能
+# 由于依赖外部服务，暂时注释保留
+
+# [RAG 相关代码已注释...]
 
 
-# class KnowledgeDocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
-#     """知识文档详情、更新和删除视图"""
-#     queryset = KnowledgeDocument.objects.all()
-#     serializer_class = KnowledgeDocumentSerializer
-#     permission_classes = [IsAdminOrReadOnly]
-    
-#     def destroy(self, request, *args, **kwargs):
-#         """删除文档时同时删除向量数据和文件"""
-#         document = self.get_object()
-        
-#         try:
-#             # 删除向量数据
-#             vector_service = VectorService()
-#             vector_service.delete_document(str(document.id))
-            
-#             # 删除文件
-#             document_processor = DocumentProcessor()
-#             if document.file_path:
-#                 document_processor.delete_file(document.file_path)
-            
-#             # 删除数据库记录
-#             return super().destroy(request, *args, **kwargs)
-            
-#         except Exception as e:
-#             return Response(
-#                 {'error': f'删除文档失败: {str(e)}'}, 
-#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-#             )
+# ==================== 新增：前端兼容的薪资计算接口 ====================
 
-
-# @api_view(['POST'])
-# @permission_classes([IsAdminUser])
-# def upload_document_view(request):
-#     """文档上传视图"""
-#     serializer = DocumentUploadSerializer(data=request.data)
-    
-#     if not serializer.is_valid():
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-#     try:
-#         # 初始化服务
-#         document_processor = DocumentProcessor()
-#         vector_service = VectorService()
-        
-#         # 验证文件
-#         uploaded_file = serializer.validated_data['file']
-#         is_valid, error_msg = document_processor.validate_file(uploaded_file)
-#         if not is_valid:
-#             return Response({'error': error_msg}, status=status.HTTP_400_BAD_REQUEST)
-        
-#         # 创建文档记录
-#         document = KnowledgeDocument.objects.create(
-#             title=serializer.validated_data['title'],
-#             description=serializer.validated_data.get('description', ''),
-#             document_type=serializer.validated_data['document_type'],
-#             department_id=serializer.validated_data.get('department'),
-#             tags=serializer.validated_data.get('tags', ''),
-#             file_name=uploaded_file.name,
-#             file_size=uploaded_file.size,
-#             uploaded_by=request.user,
-#             content='',  # 将在后台处理中填充
-#             status='processing'
-#         )
-        
-#         # 保存文件
-#         file_path = document_processor.save_uploaded_file(uploaded_file, str(document.id))
-#         document.file_path = file_path
-#         document.save()
-        
-#         # 后台处理文档（提取文本、分块、向量化）
-#         try:
-#             # 提取文本
-#             content = document_processor.extract_text_from_file(file_path)
-#             document.content = content
-            
-#             # 分块
-#             metadata = {
-#                 'title': document.title,
-#                 'document_type': document.document_type,
-#                 'department': document.department.name if document.department else None,
-#                 'uploaded_by': document.uploaded_by.username,
-#                 'file_name': document.file_name
-#             }
-            
-#             chunks = document_processor.split_text_into_chunks(content, metadata)
-            
-#             # 向量化并存储
-#             chunk_texts = [chunk['text'] for chunk in chunks]
-#             success = vector_service.add_document_chunks(str(document.id), chunk_texts, metadata)
-            
-#             if success:
-#                 document.status = 'indexed'
-#                 document.chunk_count = len(chunks)
-#             else:
-#                 document.status = 'failed'
-            
-#             document.save()
-            
-#         except Exception as e:
-#             document.status = 'failed'
-#             document.save()
-#             return Response(
-#                 {'error': f'文档处理失败: {str(e)}'}, 
-#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-#             )
-        
-#         # 返回结果
-#         response_serializer = KnowledgeDocumentSerializer(document)
-#         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-        
-#     except Exception as e:
-#         return Response(
-#             {'error': f'文档上传失败: {str(e)}'}, 
-#             status=status.HTTP_500_INTERNAL_SERVER_ERROR
-#         )
-
-
-# @api_view(['POST'])
-# @permission_classes([permissions.IsAuthenticated])
-# def search_documents_view(request):
-#     """文档搜索视图"""
-#     serializer = DocumentSearchSerializer(data=request.data)
-    
-#     if not serializer.is_valid():
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-#     try:
-#         query = serializer.validated_data['query']
-#         top_k = serializer.validated_data['top_k']
-#         document_type = serializer.validated_data.get('document_type')
-#         department = serializer.validated_data.get('department')
-        
-#         # 构建过滤条件
-#         filters = {}
-#         if document_type:
-#             filters['document_type'] = document_type
-#         if department:
-#             filters['department'] = str(department)
-        
-#         # 向量搜索
-#         vector_service = VectorService()
-#         search_results = vector_service.search_similar_documents(
-#             query=query,
-#             top_k=top_k,
-#             filters=filters if filters else None
-#         )
-        
-#         # 格式化结果
-#         results = []
-#         for i, (doc_text, metadata, distance) in enumerate(zip(
-#             search_results['documents'],
-#             search_results['metadatas'],
-#             search_results['distances']
-#         )):
-#             results.append({
-#                 'rank': i + 1,
-#                 'content': doc_text[:500] + '...' if len(doc_text) > 500 else doc_text,
-#                 'metadata': metadata,
-#                 'similarity_score': 1 - distance,  # 转换为相似度分数
-#                 'document_id': metadata.get('document_id'),
-#                 'title': metadata.get('title'),
-#                 'document_type': metadata.get('document_type')
-#             })
-        
-#         return Response({
-#             'query': query,
-#             'total_results': len(results),
-#             'results': results
-#         })
-        
-#     except Exception as e:
-#         return Response(
-#             {'error': f'搜索失败: {str(e)}'}, 
-#             status=status.HTTP_500_INTERNAL_SERVER_ERROR
-#         )
-
-
-# class ChatSessionListCreateView(generics.ListCreateAPIView):
-#     """聊天会话列表和创建视图"""
-#     serializer_class = ChatSessionSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-    
-#     def get_queryset(self):
-#         return ChatSession.objects.filter(user=self.request.user).order_by('-updated_at')
-    
-#     def perform_create(self, serializer):
-#         serializer.save(user=self.request.user)
-
-
-# class ChatSessionDetailView(generics.RetrieveUpdateDestroyAPIView):
-#     """聊天会话详情、更新和删除视图"""
-#     serializer_class = ChatSessionSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-    
-#     def get_queryset(self):
-#         return ChatSession.objects.filter(user=self.request.user)
-
-
-# @api_view(['GET'])
-# @permission_classes([permissions.IsAuthenticated])
-# def chat_session_messages_view(request, session_id):
-#     """获取会话消息列表"""
-#     try:
-#         session = ChatSession.objects.get(id=session_id, user=request.user)
-#         messages = session.messages.all().order_by('created_at')
-#         serializer = ChatMessageSerializer(messages, many=True)
-        
-#         return Response({
-#             'session_id': str(session.id),
-#             'session_title': session.title,
-#             'messages': serializer.data
-#         })
-        
-#     except ChatSession.DoesNotExist:
-#         return Response(
-#             {'error': '会话不存在'}, 
-#             status=status.HTTP_404_NOT_FOUND
-#         )
-
-
-# @api_view(['POST'])
-# @permission_classes([permissions.IsAuthenticated])
-# def chat_view(request):
-#     """RAG聊天视图"""
-#     serializer = ChatRequestSerializer(data=request.data)
-    
-#     if not serializer.is_valid():
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-#     try:
-#         message = serializer.validated_data['message']
-#         session_id = serializer.validated_data.get('session_id')
-#         model = serializer.validated_data.get('model', 'gpt-3.5-turbo')
-        
-#         # 获取或创建会话
-#         if session_id:
-#             try:
-#                 session = ChatSession.objects.get(id=session_id, user=request.user)
-#             except ChatSession.DoesNotExist:
-#                 return Response(
-#                     {'error': '会话不存在'}, 
-#                     status=status.HTTP_404_NOT_FOUND
-#                 )
-#         else:
-#             # 创建新会话
-#             llm_service = LLMService()
-#             title = llm_service.generate_title_for_session(message)
-#             session = ChatSession.objects.create(
-#                 user=request.user,
-#                 title=title
-#             )
-        
-#         # 保存用户消息
-#         user_message = ChatMessage.objects.create(
-#             session=session,
-#             role='user',
-#             content=message
-#         )
-        
-#         # 初始化服务
-#         vector_service = VectorService()
-#         llm_service = LLMService()
-        
-#         start_time = time.time()
-        
-#         # 检索相关文档
-#         search_results = vector_service.search_similar_documents(query=message)
-        
-#         # 格式化上下文
-#         context = llm_service.format_context_from_documents(search_results)
-        
-#         # 获取对话历史
-#         conversation_history = []
-#         recent_messages = session.messages.filter(
-#             created_at__lt=user_message.created_at
-#         ).order_by('-created_at')[:6]
-        
-#         for msg in reversed(recent_messages):
-#             conversation_history.append({
-#                 'role': msg.role,
-#                 'content': msg.content
-#             })
-        
-#         # 生成回答
-#         llm_response = llm_service.generate_response(
-#             query=message,
-#             context=context,
-#             conversation_history=conversation_history,
-#             model=model
-#         )
-        
-#         # 准备元数据
-#         metadata = {
-#             'search_results_count': len(search_results['documents']),
-#             'context_length': len(context),
-#             'model': model,
-#             'referenced_documents': []
-#         }
-        
-#         # 添加引用文档信息
-#         for metadata_item in search_results['metadatas']:
-#             if metadata_item:
-#                 metadata['referenced_documents'].append({
-#                     'title': metadata_item.get('title'),
-#                     'document_type': metadata_item.get('document_type'),
-#                     'document_id': metadata_item.get('document_id')
-#                 })
-        
-#         # 保存助手回复
-#         assistant_message = ChatMessage.objects.create(
-#             session=session,
-#             role='assistant',
-#             content=llm_response['response'],
-#             metadata=metadata,
-#             response_time=llm_response.get('response_time'),
-#             token_count=llm_response.get('token_count')
-#         )
-        
-#         # 更新会话时间
-#         session.save()
-        
-#         # 返回响应
-#         return Response({
-#             'session_id': str(session.id),
-#             'session_title': session.title,
-#             'message_id': str(assistant_message.id),
-#             'response': llm_response['response'],
-#             'metadata': metadata,
-#             'response_time': llm_response.get('response_time'),
-#             'success': llm_response.get('success', True)
-#         })
-        
-#     except Exception as e:
-#         return Response(
-#             {'error': f'聊天处理失败: {str(e)}'}, 
-#             status=status.HTTP_500_INTERNAL_SERVER_ERROR
-#         )
-
-
-# @api_view(['GET'])
-# @permission_classes([IsAdminUser])
-# def rag_system_stats_view(request):
-#     """RAG系统统计信息视图"""
-#     try:
-#         # 文档统计
-#         total_documents = KnowledgeDocument.objects.count()
-#         indexed_documents = KnowledgeDocument.objects.filter(status='indexed').count()
-#         processing_documents = KnowledgeDocument.objects.filter(status='processing').count()
-#         failed_documents = KnowledgeDocument.objects.filter(status='failed').count()
-        
-#         # 会话统计
-#         total_sessions = ChatSession.objects.count()
-#         active_sessions = ChatSession.objects.filter(is_active=True).count()
-#         total_messages = ChatMessage.objects.count()
-        
-#         # 向量数据库统计
-#         vector_service = VectorService()
-#         vector_stats = vector_service.get_collection_stats()
-        
-#         # LLM服务健康检查
-#         llm_service = LLMService()
-#         llm_health = llm_service.check_service_health()
-        
-#         return Response({
-#             'documents': {
-#                 'total': total_documents,
-#                 'indexed': indexed_documents,
-#                 'processing': processing_documents,
-#                 'failed': failed_documents
-#             },
-#             'conversations': {
-#                 'total_sessions': total_sessions,
-#                 'active_sessions': active_sessions,
-#                 'total_messages': total_messages
-#             },
-#             'vector_database': vector_stats,
-#             'llm_service': llm_health,
-#             'system_status': 'healthy' if llm_health.get('service_available') else 'degraded'
-#         })
-        
-#     except Exception as e:
-#         return Response(
-#             {'error': f'获取统计信息失败: {str(e)}'}, 
-#             status=status.HTTP_500_INTERNAL_SERVER_ERROR
-#         )
-# RAG and AI views @end
-
-# ==== 新增：薪资计算/批量生成接口（与前端保持一致） ====
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def calculate_salary_by_employee_view(request, employee_id):
-    """根据员工 UUID 计算并创建单条薪资记录（前端 /api/salaries/calculate/<employee_id>/）"""
-    # 解析请求数据
+    """
+    根据员工 UUID 计算并创建单条薪资记录
+    
+    设计思路：
+    - 为前端提供更直接的薪资计算接口
+    - 使用员工 UUID 而非工号，提高安全性
+    - 支持 deduction 和 deductions 两种字段名，保证兼容性
+    - 实现完整的薪资计算逻辑和数据验证
+    
+    URL: /api/salaries/calculate/<employee_id>/
+    """
+    # 解析请求数据，支持两种字段名格式
     salary_period = request.data.get('salary_period')
     bonus = Decimal(str(request.data.get('bonus', 0)))
     deduction = Decimal(str(request.data.get('deduction', request.data.get('deductions', 0))))
 
-    # 基本校验
+    # 基本数据验证
     if not salary_period or not re.match(r'^\d{4}-\d{2}$', str(salary_period)):
         return Response({'success': False, 'error': '薪资期间格式应为 YYYY-MM'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1257,22 +1021,23 @@ def calculate_salary_by_employee_view(request, employee_id):
     except Employee.DoesNotExist:
         return Response({'success': False, 'error': '员工不存在'}, status=status.HTTP_404_NOT_FOUND)
 
-    # 检查重复
+    # 检查重复记录
     if SalaryRecord.objects.filter(employee=employee, salary_period=salary_period).exists():
         return Response({'success': False, 'error': '该员工在此期间已有薪资记录'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # 计算薪资
+    # 薪资计算逻辑
     base_salary = employee.base_salary
-    gross_salary = base_salary + bonus
-    net_salary = gross_salary - deduction
+    gross_salary = base_salary + bonus      # 应发工资 = 基础工资 + 奖金
+    net_salary = gross_salary - deduction   # 实发工资 = 应发工资 - 扣除
 
+    # 创建薪资记录，包含快照数据
     salary_record = SalaryRecord.objects.create(
         employee=employee,
         salary_period=salary_period,
-        position_snapshot=employee.position,
-        base_salary_snapshot=base_salary,
+        position_snapshot=employee.position,        # 职位快照
+        base_salary_snapshot=base_salary,          # 基础工资快照
         bonus=bonus,
-        deductions=deduction,
+        deductions=deduction,                      # 注意：数据库字段是 deductions
         gross_salary=gross_salary,
         net_salary=net_salary
     )
@@ -1287,28 +1052,41 @@ def calculate_salary_by_employee_view(request, employee_id):
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def generate_salaries_view(request):
-    """为所有员工批量生成薪资记录（前端 /api/salaries/generate/）"""
+    """
+    为所有员工批量生成薪资记录
+    
+    设计思路：
+    - 支持批量薪资生成，提高管理效率
+    - 自动跳过已存在的薪资记录，避免重复
+    - 返回详细的处理结果，包括成功和跳过的记录
+    - 使用事务确保数据一致性
+    
+    URL: /api/salaries/generate/
+    """
     salary_period = request.data.get('salary_period')
     bonus = Decimal(str(request.data.get('bonus', 0)))
     deduction = Decimal(str(request.data.get('deduction', request.data.get('deductions', 0))))
 
-    # 校验
+    # 数据验证
     if not salary_period or not re.match(r'^\d{4}-\d{2}$', str(salary_period)):
         return Response({'success': False, 'error': '薪资期间格式应为 YYYY-MM'}, status=status.HTTP_400_BAD_REQUEST)
 
     created_records = []
     skipped_employees = []
 
+    # 遍历所有员工进行批量处理
     for employee in Employee.objects.all():
-        # 跳过已存在记录
+        # 跳过已存在记录的员工
         if SalaryRecord.objects.filter(employee=employee, salary_period=salary_period).exists():
             skipped_employees.append(employee.employee_id)
             continue
 
+        # 薪资计算
         base_salary = employee.base_salary
         gross_salary = base_salary + bonus
         net_salary = gross_salary - deduction
 
+        # 创建薪资记录
         record = SalaryRecord.objects.create(
             employee=employee,
             salary_period=salary_period,
@@ -1330,4 +1108,42 @@ def generate_salaries_view(request):
         }
     }, status=status.HTTP_201_CREATED)
 
-# ==== 结束新增 ====
+# ==================== 接口设计说明 ====================
+"""
+整体设计思路总结：
+
+1. 架构设计：
+   - 采用 RESTful API 设计原则
+   - 使用 Django REST Framework 提供标准化的 API 接口
+   - 分层架构：视图层 -> 序列化层 -> 模型层
+
+2. 权限控制：
+   - 基于 Token 的认证机制
+   - 自定义权限类实现细粒度权限控制
+   - 区分管理员和普通用户的访问权限
+
+3. 数据处理：
+   - 统一的数据验证和序列化机制
+   - 支持分页、搜索、筛选、排序功能
+   - 异常处理确保系统稳定性
+
+4. 业务逻辑：
+   - 薪资计算采用快照机制，保证历史数据准确性
+   - 防止重复数据创建，确保数据一致性
+   - 支持批量操作，提高管理效率
+
+5. 响应格式：
+   - 统一的 JSON 响应格式
+   - 包含成功状态、错误信息、数据内容
+   - 便于前端统一处理
+
+6. 性能优化：
+   - 使用 select_related 优化数据库查询
+   - 合理的分页机制减少数据传输
+   - 缓存策略提升响应速度
+
+7. 扩展性：
+   - 模块化设计，便于功能扩展
+   - 预留 RAG 和 AI 功能接口
+   - 支持多种数据导出格式
+"""

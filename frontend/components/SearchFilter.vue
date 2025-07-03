@@ -53,6 +53,11 @@
 
     <!-- 操作按钮 -->
     <div class="flex justify-between items-center mt-4">
+      <!-- 清除筛选按钮 
+          功能：点击后清除所有筛选条件
+          样式：灰色边框按钮，悬停时文字变深、背景变浅
+          交互：绑定clearFilters方法，点击时触发
+      -->
       <button
         @click="clearFilters"
         class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"

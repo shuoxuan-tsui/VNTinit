@@ -110,7 +110,7 @@
                   <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
                     <span class="text-red-600 text-xl font-bold drop-shadow-sm">¥</span>
                   </div>
-                  <input v-model.number="form.deduction" type="number" step="0.01" min="0" placeholder="0.00" class="block w-full pl-12 pr-6 py-4 backdrop-blur-md bg-gradient-to-r from-white to-red-50 bg-opacity-95 border-2 border-red-200 hover:border-red-300 rounded-2xl shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-red-200 focus:ring-opacity-50 focus:border-red-400 text-gray-900 placeholder-gray-500 text-lg font-medium transition-all duration-300 transform hover:scale-[1.02]" />
+                  <input v-model.number="form.deductions" type="number" step="0.01" min="0" placeholder="0.00" class="block w-full pl-12 pr-6 py-4 backdrop-blur-md bg-gradient-to-r from-white to-red-50 bg-opacity-95 border-2 border-red-200 hover:border-red-300 focus:border-red-400 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-300 focus:ring-opacity-50 transition-all duration-300 text-lg font-semibold shadow-lg" />
                 </div>
               </div>
             </div>
@@ -196,7 +196,7 @@ const form = reactive({
   employeeId: '',
   salaryPeriod: '',
   bonus: 0,
-  deduction: 0
+  deductions: 0
 })
 
 // 提交表单
@@ -216,7 +216,7 @@ const handleSubmit = async () => {
     const payload = {
       salary_period: form.salaryPeriod,
       bonus: Number(form.bonus) || 0,
-      deduction: Number(form.deduction) || 0
+      deductions: Number(form.deductions) || 0
     }
     
     console.log('发送请求:', { employeeId: form.employeeId, payload })

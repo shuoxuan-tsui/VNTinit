@@ -68,9 +68,9 @@ const currentDate = computed(() => {
 
 // 仪表盘顶部的核心统计指标
 const stats = ref({
-  totalEmployees: 156,
+  totalEmployees: 68,
   employeeGrowth: 12.5,
-  totalDepartments: 8,
+  totalDepartments: 6,
   attendanceRate: 96.8,
   averageSalary: 12500
 })

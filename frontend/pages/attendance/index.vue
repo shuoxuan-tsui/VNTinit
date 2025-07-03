@@ -413,20 +413,22 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-// 页面元数据
+// --- 页面元数据 ---
+// 定义页面布局为 'default'，确保页面拥有一致的头部和侧边栏导航。
 definePageMeta({
   layout: 'default'
 })
 
-// 响应式数据
-const loading = ref(false)
-const activeTab = ref('records')
-const showCheckInModal = ref(false)
-const showLeaveModal = ref(false)
+// --- 响应式状态 ---
+// UI 状态
+const loading = ref(false) // 用于控制加载状态的显示，未来对接API时会非常有用。
+const activeTab = ref('records') // 控制当前激活的标签页，可以是 'records', 'leave', 或 'statistics'。
+const showCheckInModal = ref(false) // 控制打卡模态框的显示（当前未实现）。
+const showLeaveModal = ref(false) // 控制请假申请模态框的显示（当前未实现）。
 
 // 搜索和筛选
-const searchQuery = ref('')
-const filters = ref({
+const searchQuery = ref('') // 绑定搜索输入框的值。
+const filters = ref({ // 存储筛选条件。
   department: '',
   status: '',
   dateRange: {
@@ -435,7 +437,12 @@ const filters = ref({
   }
 })
 
-// 考勤记录数据
+// --- 模拟数据 (Mock Data) ---
+// 在项目初期或后端API尚未完成时，使用模拟数据是一种非常高效的开发方式。
+// 它允许前端开发与后端并行进行，并能提前构建和测试UI交互。
+// 注意：以下所有数据都是静态的，在实际应用中需要替换为从API获取的动态数据。
+
+// 考勤记录模拟数据
 const attendanceRecords = ref([
   {
     id: 1,
@@ -471,31 +478,31 @@ const attendanceRecords = ref([
     employeeName: '王五',
     department: '人事部',
     date: '2024-04-15',
-    checkInTime: '',
-    checkOutTime: '',
-    workHours: 0,
+    checkInTime: '08:50:00',
+    checkOutTime: '17:50:00',
+    workHours: 8,
     overtimeHours: 0,
-    status: 'absent',
-    location: '',
-    notes: '病假'
+    status: 'early',
+    location: '上海分部',
+    notes: '早退10分钟'
   },
   {
     id: 4,
     employeeId: 'EMP004',
     employeeName: '赵六',
-    department: '财务部',
+    department: '技术部',
     date: '2024-04-15',
-    checkInTime: '08:45:00',
-    checkOutTime: '19:30:00',
-    workHours: 9.75,
-    overtimeHours: 1.75,
-    status: 'overtime',
+    checkInTime: null,
+    checkOutTime: null,
+    workHours: 0,
+    overtimeHours: 0,
+    status: 'absent',
     location: '北京总部',
-    notes: '加班处理月末结账'
+    notes: '未打卡'
   }
 ])
 
-// 请假记录数据
+// 请假记录模拟数据
 const leaveRecords = ref([
   {
     id: 1,
@@ -515,21 +522,21 @@ const leaveRecords = ref([
   {
     id: 2,
     employeeId: 'EMP005',
-    employeeName: '钱七',
-    department: '运营部',
-    leaveType: 'annual',
-    startDate: '2024-04-20',
-    endDate: '2024-04-22',
-    days: 3,
-    reason: '家庭旅行',
+    employeeName: '孙七',
+    department: '市场部',
+    leaveType: 'personal',
+    startDate: '2024-04-17',
+    endDate: '2024-04-17',
+    days: 1,
+    reason: '处理个人事务',
     status: 'pending',
-    appliedAt: '2024-04-13 16:45:00',
-    approvedBy: '',
-    approvedAt: ''
+    appliedAt: '2024-04-16 09:00:00',
+    approvedBy: null,
+    approvedAt: null
   }
 ])
 
-// 考勤统计数据
+// 考勤统计模拟数据
 const attendanceStats = ref({
   today: {
     totalEmployees: 156,
@@ -547,13 +554,21 @@ const attendanceStats = ref({
 })
 
 // 标签页配置
+// 将标签页的配置信息抽象成一个数组，使得添加、删除或修改标签页变得简单，
+// 只需修改这个数组即可，无需改动模板代码。
 const tabs = ref([
   { id: 'records', name: '考勤记录', icon: 'heroicons:clock' },
   { id: 'leave', name: '请假管理', icon: 'heroicons:calendar-days' },
   { id: 'statistics', name: '考勤统计', icon: 'heroicons:chart-bar' }
 ])
 
-// 计算属性
+// --- 计算属性 ---
+
+/**
+ * @description 根据搜索和筛选条件过滤考勤记录。
+ * 这是一个纯前端的过滤实现，对于模拟数据或从API一次性获取的小批量数据非常有效。
+ * 它能够实时响应用户的输入，提供即时反馈。
+ */
 const filteredRecords = computed(() => {
   let filtered = attendanceRecords.value
 
@@ -585,11 +600,23 @@ const filteredRecords = computed(() => {
   return filtered
 })
 
+/**
+ * @description 从考勤记录中动态提取所有不重复的部门名称。
+ * 使用 `Set` 来确保唯一性，这样下拉筛选菜单中就不会有重复的部门。
+ */
 const departments = computed(() => {
   return [...new Set(attendanceRecords.value.map(record => record.department))]
 })
 
-// 方法
+// --- 方法 ---
+
+/**
+ * @description 将状态标识符（如 'normal'）转换成用户友好的中文文本。
+ * 这种辅助函数的设计使得数据和视图分离，如果未来需要修改文本（例如改成繁体中文），
+ * 只需修改这个函数，而不用动模板代码。
+ * @param {string} status - 状态标识符
+ * @returns {string} - 格式化后的状态文本
+ */
 const getStatusText = (status) => {
   const statusMap = {
     'normal': '正常',
@@ -602,6 +629,12 @@ const getStatusText = (status) => {
   return statusMap[status] || status
 }
 
+/**
+ * @description 根据状态返回对应的 Tailwind CSS 类名，用于显示不同颜色的状态标签。
+ * 这种方法将样式逻辑封装在脚本中，使模板更清晰，也便于统一管理样式。
+ * @param {string} status - 状态标识符
+ * @returns {string} - 对应的 CSS 类名
+ */
 const getStatusColor = (status) => {
   const colorMap = {
     'normal': 'text-green-600 bg-green-100',
@@ -614,6 +647,7 @@ const getStatusColor = (status) => {
   return colorMap[status] || 'text-gray-600 bg-gray-100'
 }
 
+// 同样的设计思路应用于请假类型和请假状态
 const getLeaveTypeText = (type) => {
   const typeMap = {
     'annual': '年假',
@@ -647,23 +681,33 @@ const getLeaveStatusColor = (status) => {
   return colorMap[status] || 'text-gray-600 bg-gray-100'
 }
 
+// --- 事件处理函数 ---
+// 这些函数是页面交互的入口点，它们会修改组件的状态或调用其他方法。
+
 const checkIn = () => {
+  // 未来实现：调用打卡API
   showCheckInModal.value = true
+  console.log('打开打卡模态框')
 }
 
 const applyLeave = () => {
+  // 未来实现：显示请假申请表单
   showLeaveModal.value = true
+  console.log('打开请假模态框')
 }
 
 const exportAttendance = () => {
+  // 未来实现：将 `filteredRecords` 的数据导出为 CSV 或 Excel 文件
   console.log('导出考勤数据')
 }
 
+// 注意：以下两个函数直接修改了模拟数据。
+// 在实际应用中，它们应该调用API，然后在成功回调中更新本地状态或重新获取数据。
 const approveLeave = (leaveId) => {
   const leave = leaveRecords.value.find(l => l.id === leaveId)
   if (leave) {
     leave.status = 'approved'
-    leave.approvedBy = '当前用户'
+    leave.approvedBy = '当前用户' // 应为实际登录的用户名
     leave.approvedAt = new Date().toLocaleString('zh-CN')
   }
 }
@@ -677,6 +721,9 @@ const rejectLeave = (leaveId) => {
   }
 }
 
+/**
+ * @description 清空所有筛选条件，恢复到初始列表状态。
+ */
 const clearFilters = () => {
   searchQuery.value = ''
   filters.value = {
@@ -689,8 +736,10 @@ const clearFilters = () => {
   }
 }
 
-// 生命周期
+// --- 生命周期钩子 ---
 onMounted(() => {
+  // 在组件挂载后可以执行一些初始化操作，
+  // 例如，如果不是用模拟数据，这里会是调用API获取初始考勤记录的地方。
   console.log('考勤管理页面加载完成')
 })
 </script> 

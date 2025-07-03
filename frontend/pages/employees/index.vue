@@ -8,7 +8,7 @@
           管理公司员工信息，共 {{ totalServerEmployees }} 名员工
         </p>
       </div>
-
+      
       <!-- 操作按钮区域 -->
       <div class="mt-4 sm:mt-0 flex space-x-3">
         <button
@@ -468,7 +468,7 @@
                   >
                     <Icon name="heroicons:eye" class="h-4 w-4" />
                   </button>
-
+                  
                   <!-- 快速编辑 (仅管理员) -->
                   <button
                     v-if="isAdmin"
@@ -488,7 +488,7 @@
                   >
                     <Icon name="heroicons:cog-6-tooth" class="h-4 w-4" />
                   </NuxtLink>
-
+                  
                   <!-- 删除 (仅管理员) -->
                   <button
                     v-if="isAdmin"
@@ -559,7 +559,7 @@
                 >
                   <Icon name="heroicons:chevron-left" class="h-5 w-5" />
                 </button>
-
+                
                 <button
                   v-for="page in visiblePages"
                   :key="page"
@@ -573,7 +573,7 @@
                 >
                   {{ page }}
                 </button>
-
+                
                 <button
                   @click="changePage(currentPage + 1)"
                   :disabled="currentPage >= totalPages"
@@ -600,7 +600,7 @@
         <div
           class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
         ></div>
-
+        
         <div
           class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
         >
@@ -965,8 +965,8 @@ definePageMeta({
 // 通过 useEmployeeApi 和 useDepartmentApi 组合式函数来封装 API 调用。
 // 这种设计模式（Composition API）使得逻辑可以被轻松地重用和组织。
 // 将 API 调用抽象出来，可以使得组件代码更关注于视图逻辑，而不是数据获取的实现细节。
-const {
-  getEmployees,
+const { 
+  getEmployees, 
   deleteEmployee: apiDeleteEmployee,
   updateEmployee: apiUpdateEmployee,
 } = useEmployeeApi();
@@ -1069,11 +1069,11 @@ const fetchEmployees = async () => {
     }
 
     console.log("Fetching employees with params:", apiParams);
-
+    
     // 调用API获取员工数据
     const response = await getEmployees(apiParams);
     console.log("API response:", response);
-
+    
     // 处理不同格式的API响应，增强代码的健壮性
     if (response && response.results) {
       // 1. 标准分页响应
@@ -1124,9 +1124,9 @@ const filteredEmployees = computed(() => {
     const lowerSearchQuery = searchQuery.value.toLowerCase();
     employees = employees.filter(
       (emp) =>
-        emp.name.toLowerCase().includes(lowerSearchQuery) ||
-        emp.employee_id.toLowerCase().includes(lowerSearchQuery) ||
-        (emp.phone && emp.phone.toLowerCase().includes(lowerSearchQuery))
+      emp.name.toLowerCase().includes(lowerSearchQuery) ||
+      emp.employee_id.toLowerCase().includes(lowerSearchQuery) ||
+      (emp.phone && emp.phone.toLowerCase().includes(lowerSearchQuery))
     );
   }
 
@@ -1367,7 +1367,7 @@ onMounted(() => {
             fetchDepartments();
           } else {
             console.error("自动登录失败:", loginResponse);
-          }
+        }
         })
         .catch((err) => {
           console.error("自动登录错误:", err);
@@ -1681,7 +1681,7 @@ const exportEmployees = () => {
   filteredEmployees.value.forEach((emp) => {
     const row = tableColumns
       .map((col) => {
-        let val = emp[col.key];
+      let val = emp[col.key];
         // 格式化特殊字段
         if (col.key === "gender") val = emp.gender === "M" ? "男" : "女";
         if (col.key === "hire_date") val = formatDate(emp.hire_date);
@@ -1699,14 +1699,14 @@ const exportEmployees = () => {
   const link = document.createElement("a");
   link.setAttribute("href", encodedUri);
   link.setAttribute("download", "employees_export.csv");
-  document.body.appendChild(link);
+  document.body.appendChild(link); 
   link.click();
   document.body.removeChild(link);
 };
 </script>
 
 <style scoped>
-/* From Uiverse.io by mask_guy_0 */
+/* From Uiverse.io by mask_guy_0 */ 
 .animated-button {
   position: relative;
   display: flex;
@@ -1966,4 +1966,4 @@ const exportEmployees = () => {
     width: auto;
   }
 }
-</style>
+</style> 

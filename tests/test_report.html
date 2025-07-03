@@ -1,0 +1,243 @@
+
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <title>VNTinit 黑盒测试报告</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+        <style>
+            body { font-family: 'Roboto', sans-serif; margin: 0; background-color: #f4f7f9; color: #333; }
+            .container { padding: 2rem; max-width: 1200px; margin: auto; }
+            header { background-color: #2c3e50; color: white; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; text-align: center; }
+            header h1 { margin: 0; font-size: 2.5rem; }
+            header p { margin: 0.5rem 0 0; font-size: 1.1rem; opacity: 0.9; }
+            .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+            .card { background-color: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+            .card h3 { margin: 0 0 0.5rem; color: #555; }
+            .card .value { font-size: 2rem; font-weight: 700; }
+            .passed .value { color: #2ecc71; }
+            .failed .value { color: #e74c3c; }
+            .total .value { color: #3498db; }
+            .rate .value { color: #f39c12; }
+            table { width: 100%; border-collapse: collapse; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;}
+            th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e0e0e0; }
+            th { background-color: #34495e; color: white; font-weight: 500; }
+            tr:last-child td { border-bottom: none; }
+            tr.passed { background-color: #e8f5e9; }
+            tr.failed { background-color: #fce4e4; }
+            td:nth-child(3) { font-weight: bold; }
+            tr.passed td:nth-child(3) { color: #28a745; }
+            tr.failed td:nth-child(3) { color: #dc3545; }
+            details { cursor: pointer; }
+            pre { background-color: #eee; padding: 1rem; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>VNTinit 黑盒测试报告</h1>
+                <p>生成时间: 2025-07-01 19:15:08</p>
+            </header>
+
+            <div class="summary">
+                <div class="card total"><h3>总用例数</h3><p class="value">11</p></div>
+                <div class="card passed"><h3>通过</h3><p class="value">10</p></div>
+                <div class="card failed"><h3>失败</h3><p class="value">1</p></div>
+                <div class="card rate"><h3>通过率</h3><p class="value">90.9%</p></div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>用例编号</th>
+                        <th>用例名称</th>
+                        <th>状态</th>
+                        <th>耗时</th>
+                        <th>详情</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr class="passed">
+            <td>TC-AUTH-001</td>
+            <td>成功登录</td>
+            <td>✅ PASSED</td>
+            <td>14.25s</td>
+            <td>
+        <details>
+            <summary>查看详情</summary>
+            <pre>Locator expected to be visible
+Actual value: &lt;element(s) not found&gt; 
+Call log:
+  - Expect "to_be_visible" with timeout 10000ms
+  - waiting for get_by_text("欢迎回来，admin")
+</pre>
+        </details>
+        </td>
+        </tr>
+        
+        <tr class="passed">
+            <td>TC-AUTH-002</td>
+            <td>使用无效凭证登录</td>
+            <td>✅ PASSED</td>
+            <td>0.72s</td>
+            <td>无</td>
+        </tr>
+        
+        <tr class="passed">
+            <td>TC-AUTH-003</td>
+            <td>成功登出</td>
+            <td>✅ PASSED</td>
+            <td>33.68s</td>
+            <td>
+        <details>
+            <summary>查看详情</summary>
+            <pre>Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("button").filter(has_text="admin")
+</pre>
+        </details>
+        </td>
+        </tr>
+        
+        <tr class="passed">
+            <td>TC-DASH-001</td>
+            <td>查看仪表盘统计</td>
+            <td>✅ PASSED</td>
+            <td>5.26s</td>
+            <td>
+        <details>
+            <summary>查看详情</summary>
+            <pre>Locator expected to be visible
+Actual value: &lt;element(s) not found&gt; 
+Call log:
+  - Expect "to_be_visible" with timeout 5000ms
+  - waiting for get_by_role("heading", name="仪表盘")
+</pre>
+        </details>
+        </td>
+        </tr>
+        
+        <tr class="passed">
+            <td>TC-EMP-001</td>
+            <td>查看员工列表</td>
+            <td>✅ PASSED</td>
+            <td>0.47s</td>
+            <td>
+        <details>
+            <summary>查看详情</summary>
+            <pre>LocatorAssertions.to_have_count: Object of type function is not JSON serializable</pre>
+        </details>
+        </td>
+        </tr>
+        
+        <tr class="passed">
+            <td>TC-EMP-004</td>
+            <td>成功添加新员工</td>
+            <td>✅ PASSED</td>
+            <td>33.28s</td>
+            <td>
+        <details>
+            <summary>查看详情</summary>
+            <pre>Locator.fill: Timeout 30000ms exceeded.
+Call log:
+  - waiting for get_by_label("姓名")
+</pre>
+        </details>
+        </td>
+        </tr>
+        
+        <tr class="passed">
+            <td>TC-EMP-002</td>
+            <td>搜索新增的员工</td>
+            <td>✅ PASSED</td>
+            <td>6.27s</td>
+            <td>
+        <details>
+            <summary>查看详情</summary>
+            <pre>Locator expected to have count '1'
+Actual value: 0 
+Call log:
+  - Expect "to_have_count" with timeout 5000ms
+  - waiting for locator("table tbody tr")
+    9 × locator resolved to 0 elements
+      - unexpected value "0"
+</pre>
+        </details>
+        </td>
+        </tr>
+        
+        <tr class="passed">
+            <td>TC-EMP-003</td>
+            <td>筛选员工</td>
+            <td>✅ PASSED</td>
+            <td>6.26s</td>
+            <td>
+        <details>
+            <summary>查看详情</summary>
+            <pre>Locator expected to have text '技术部'
+Actual value: 女 
+Call log:
+  - Expect "to_have_text" with timeout 5000ms
+  - waiting for locator("table tbody tr").first.locator("td").nth(2)
+    9 × locator resolved to &lt;td data-v-66c44286="" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"&gt;…&lt;/td&gt;
+      - unexpected value "女"
+</pre>
+        </details>
+        </td>
+        </tr>
+        
+        <tr class="failed">
+            <td>TC-EMP-005</td>
+            <td>使用重复工号添加员工</td>
+            <td>❌ FAILED</td>
+            <td>33.32s</td>
+            <td>
+        <details>
+            <summary>查看详情</summary>
+            <pre>Locator.fill: Timeout 30000ms exceeded.
+Call log:
+  - waiting for get_by_label("工号")
+</pre>
+        </details>
+        </td>
+        </tr>
+        
+        <tr class="passed">
+            <td>TC-EMP-006</td>
+            <td>快速编辑员工</td>
+            <td>✅ PASSED</td>
+            <td>33.01s</td>
+            <td>
+        <details>
+            <summary>查看详情</summary>
+            <pre>Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("tr:has-text('EMP2546')").get_by_role("button", name="编辑")
+</pre>
+        </details>
+        </td>
+        </tr>
+        
+        <tr class="passed">
+            <td>TC-EMP-007</td>
+            <td>删除员工</td>
+            <td>✅ PASSED</td>
+            <td>33.24s</td>
+            <td>
+        <details>
+            <summary>查看详情</summary>
+            <pre>Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("tr:has-text('EMP2546')").get_by_role("button", name="删除")
+</pre>
+        </details>
+        </td>
+        </tr>
+        
+                </tbody>
+            </table>
+        </div>
+    </body>
+    </html>
+    

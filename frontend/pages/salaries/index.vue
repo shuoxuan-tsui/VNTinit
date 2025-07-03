@@ -182,7 +182,7 @@
                 <span class="text-green-600">+¥{{ formatCurrency(record.bonus || 0) }}</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span class="text-red-600">-¥{{ formatCurrency(record.deduction || 0) }}</span>
+                <span class="text-red-600">-¥{{ formatCurrency(record.deductions || 0) }}</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                 ¥{{ formatCurrency(record.net_salary || calculateNetSalary(record)) }}
@@ -387,7 +387,7 @@
                         </div>
                         <input
                           id="calc-deduction"
-                          v-model.number="calculateForm.deduction"
+                          v-model.number="calculateForm.deductions"
                           type="number"
                           step="0.01"
                           min="0"
@@ -453,7 +453,7 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">扣除</label>
-                <input v-model.number="editForm.deduction" type="number" step="0.01" min="0" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-accent focus:border-accent" />
+                <input v-model.number="editForm.deductions" type="number" step="0.01" min="0" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-accent focus:border-accent" />
               </div>
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
@@ -540,11 +540,11 @@ const calculateForm = reactive({
   employeeId: '',
   salaryPeriod: '',
   bonus: 0,
-  deduction: 0
+  deductions: 0
 })
 const editForm = reactive({
   bonus: 0,
-  deduction: 0
+  deductions: 0
 })
 
 // 核心数据
@@ -568,7 +568,7 @@ const tableColumns = [
   { key: 'base_salary_snapshot', label: '基础工资', sortable: true },
   { key: 'gross_salary', label: '应发工资', sortable: true },
   { key: 'bonus', label: '奖金', sortable: true },
-  { key: 'deduction', label: '扣除', sortable: true },
+  { key: 'deductions', label: '扣除', sortable: true },
   { key: 'net_salary', label: '实发工资', sortable: true },
   { key: 'pay_date', label: '发放日期', sortable: true }
 ]
@@ -781,7 +781,7 @@ const printSalary = (record) => {
 const editSalaryRecord = (record) => {
   selectedRecord.value = record
   editForm.bonus = Number(record.bonus || 0)
-  editForm.deduction = Number(record.deduction || 0)
+  editForm.deductions = Number(record.deductions || 0)
   showEditModal.value = true
 }
 
@@ -792,7 +792,7 @@ const submitEditSalary = async () => {
   try {
     const payload = {
       bonus: editForm.bonus,
-      deductions: editForm.deduction
+      deductions: editForm.deductions
     }
     const res = await salaryApi.updateSalary(selectedRecord.value.id, payload)
     if (res && res.success !== false) {
@@ -824,7 +824,7 @@ const deleteSalaryRecord = async () => {
     }
   } catch (err) {
     console.error('删除薪资记录失败:', err)
-  }
+}
 }
 
 /**
@@ -836,7 +836,7 @@ const closeCalculateModal = () => {
     employeeId: '',
     salaryPeriod: '',
     bonus: 0,
-    deduction: 0
+    deductions: 0
   })
 }
 
@@ -853,7 +853,7 @@ const calculateSalary = async () => {
     const salaryData = {
       salary_period: calculateForm.salaryPeriod,
       bonus: calculateForm.bonus || 0,
-      deduction: calculateForm.deduction || 0
+      deduction: calculateForm.deductions || 0
     }
     
     let response
@@ -929,8 +929,8 @@ const calculateGrossSalary = (record) => {
 
 const calculateNetSalary = (record) => {
   const grossSalary = record.gross_salary || calculateGrossSalary(record)
-  const deduction = Number(record.deduction || 0)
-  return Number(grossSalary) - deduction
+  const deductions = Number(record.deductions || 0)
+  return Number(grossSalary) - deductions
 }
 
 // --- 工具函数 ---

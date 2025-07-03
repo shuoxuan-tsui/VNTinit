@@ -82,11 +82,11 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * 初始化认证状态。
    * 设计：
-   * - **客户端执行**: `if (process.client)` 是关键。Cookie 是浏览器特有的 API，在 Node.js 服务端渲染环境中不存在 `document.cookie`。
+   * - 客户端执行: if (process.client) 是关键。Cookie 是浏览器特有的 API，在 Node.js 服务端渲染环境中不存在 document.cookie。
    *   此检查确保这段代码只在客户端（浏览器）执行，避免了 SSR 错误。
-   * - **持久化恢复**: 此函数的目标是从 Cookie 中恢复用户的登录状态。当应用加载时（特别是刷新页面后），它可以读取之前存储的 token 和 user 信息，
+   * - 持久化恢复: 此函数的目标是从 Cookie 中恢复用户的登录状态。当应用加载时（特别是刷新页面后），它可以读取之前存储的 token 和 user 信息，
    *   让用户无需重新登录。这是提升用户体验的重要一环。
-   * - **健壮性**: 使用 `try-catch` 块来解析用户 JSON 数据。如果 Cookie 中的数据格式损坏或不合法，程序不会崩溃，而是会安全地将 `user` 置为 `null`。
+   * - 健壮性: 使用 try-catch 块来解析用户 JSON 数据。如果 Cookie 中的数据格式损坏或不合法，程序不会崩溃，而是会安全地将 user 置为 null。
    */
   const initAuth = () => {
     // 检查是否在客户端执行。因为 cookie 是一个浏览器才有的特定概念，所以只能在客户端执行。
@@ -117,12 +117,12 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * 用户登录。
    * 设计：
-   * - **异步操作**: 登录是一个网络请求，因此是 `async` 函数。
-   * - **状态管理**: 登录开始时设置 `loading.value = true`，结束时（无论成功或失败）在 `finally` 块中设置 `loading.value = false`。
+   * - 异步操作: 登录是一个网络请求，因此是 async 函数。
+   * - 状态管理: 登录开始时设置 loading.value = true，结束时（无论成功或失败）在 finally 块中设置 loading.value = false。
    *   这确保了加载状态的正确切换。
-   * - **成功处理**: 登录成功后，更新 `token` 和 `user` 状态，并使用 `useCookie` 将这些信息持久化到 Cookie 中。
-   * - **错误处理**: 
-   *   - 使用 `try-catch` 捕获请求过程中的任何错误。
+   * - 成功处理: 登录成功后，更新 token 和 user 状态，并使用 useCookie 将这些信息持久化到 Cookie 中。
+   * - 错误处理: 
+   *   - 使用 try-catch 捕获请求过程中的任何错误。
    *   - 提供了详细的错误日志，便于调试。
    *   - 对不同类型的错误（网络错误、服务器返回的业务错误）进行分类处理，并向上抛出对用户更友好的错误信息。
    *   - 不直接在 store 中处理 UI 反馈（如弹窗），而是通过抛出错误，让调用此函数的组件（如登录页面）来决定如何向用户展示错误。
@@ -200,8 +200,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   /**
    * 用户注册。
-   * 设计思路与 `login` 函数类似：
-   * - 管理 `loading` 状态。
+   * 设计思路与 login 函数类似：
+   * - 管理 loading 状态。
    * - 调用后端注册接口。
    * - 详细的日志记录和健壮的错误处理。
    * - 注册成功后不直接登录，而是返回成功信息，通常由页面引导用户去登录。
@@ -268,11 +268,11 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * 用户登出。
    * 设计：
-   * - **通知后端**: 首先尝试向后端 `/api/auth/logout/` 发送请求。这可以让后端有机会执行一些清理操作，比如销毁 session、记录登出时间等。
-   *   即使这个请求失败（例如网络中断），`finally` 块依然会执行，确保前端状态和 Cookie 被清理。
-   * - **清理本地状态**: 在 `finally` 块中，将 `user` 和 `token` 状态重置为 `null`。
-   * - **清理持久化数据**: 将相关的 Cookie 值设为 `null`，以清除持久化的登录状态。
-   * - **重定向**: 使用 `navigateTo('/login')` 将用户重定向到登录页面，这是一个清晰的用户体验流程。
+   * - 通知后端: 首先尝试向后端 `/api/auth/logout/` 发送请求。这可以让后端有机会执行一些清理操作，比如销毁 session、记录登出时间等。
+   *   即使这个请求失败（例如网络中断），finally 块依然会执行，确保前端状态和 Cookie 被清理。
+   * - 清理本地状态: 在 finally 块中，将 user 和 token 状态重置为 null。
+   * - 清理持久化数据: 将相关的 Cookie 值设为 null，以清除持久化的登录状态。
+   * - 重定向: 使用 navigateTo('/login') 将用户重定向到登录页面，这是一个清晰的用户体验流程。
    */
   async function logout() {
     try {
@@ -334,8 +334,8 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * 刷新当前用户信息。
    * 设计：
-   * - **数据同步**: 用于在需要时（例如，用户修改了个人资料后）从后端获取最新的用户信息，并更新本地状态和 Cookie。
-   * - **Token 验证**: 此请求也间接验证了当前 `token` 的有效性。如果请求失败（特别是401 Unauthorized），
+   * - 数据同步: 用于在需要时（例如，用户修改了个人资料后）从后端获取最新的用户信息，并更新本地状态和 Cookie。
+   * - Token 验证: 此请求也间接验证了当前 token 的有效性。如果请求失败（特别是401 Unauthorized），
    *   说明 token 可能已过期或无效，此时应执行登出操作，强制用户重新登录。
    */
   async function refreshUser() {
@@ -376,7 +376,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
-    initializeAuth, // 注意：此函数与 initAuth 功能重复
+    initializeAuth, // 注意：此函数与 initAuth 功能重复 但不知道为什么删了会崩
     refreshUser
   }
 }) 
